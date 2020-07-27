@@ -2181,7 +2181,7 @@ function(Dialogs, $dialog) {
             scope.checkItem = function(item) {
                 item.checked = item.checked ? false : true;
 
-                if (item.checked && !item.isFolder)
+                if (item.checked)
                     scope.checkedItems.push(item)
                 else {
                     // remove from checked list

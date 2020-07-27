@@ -313,7 +313,7 @@ md-toolbar,
 .md-toolbar-tools {
     height: 50px;
     min-height: 50px;
-    max-height: 50px;
+    max-height: 70px;
 }
 
 .md-toolbar-accent {
@@ -1302,6 +1302,7 @@ input[name=upload] {
     right: -30px;
 }
 
+#more-dd,
 #login-dd {
     padding-top: 4px;
     text-align: left;
@@ -1309,7 +1310,7 @@ input[name=upload] {
 
 
 #more-dd > a:hover,
-#login-dd > div:hover{
+#login-dd > a:hover{
     color: #dfdfdf;
 }
 
