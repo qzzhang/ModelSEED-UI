@@ -91,7 +91,7 @@ function($s, WS, MS, Auth, Session, uiTools, Dialogs, $state) {
     }
 
 }])
-// End Subsystems controller
+// End MySubsystems controller
 
 // Begin Subsystem controller
 .controller('Subsystem',

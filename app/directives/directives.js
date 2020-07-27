@@ -1403,7 +1403,7 @@ function($compile, $stateParams) {
 }])
 
 .directive('ngTableSubsystem',
-            ['$state', '$sce', '$compile', 'Dialogs', 'WS', '$http',
+           ['$state', '$sce', '$compile', 'Dialogs', 'WS', '$http',
     function($state, $sce, $compile, Dialogs, WS, $http) {
     return {
         restrict: 'EA',
