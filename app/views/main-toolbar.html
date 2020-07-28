@@ -42,11 +42,11 @@
             </a>
         </li>
 
-        <li>
+        <!--li>
             <a ui-sref="app.demo_subsystem" target="_blank">
                 Subsystem Demo
             </a>
-        </li>
+        </li-->
 
         <!-- TODO MODELSEED-59: KBASE trap>
             <md-button md-no-ink ng-click="toggleOperations($event, 'kbase')" 
@@ -67,9 +67,8 @@
             </a>
         </li>
 
-
-        <div>
-            <md-button ng-if="!$root.user" class="md-raised md-primary pull-right" ui-sref="app.RefModels">
+        <div ng-controller="RefModels">
+            <md-button ng-if="!$root.user" class="md-raised md-primary pull-right" ng-click="signin()">
                 Sign In
             </md-button>
             <md-button ng-if="$root.user"  class="md-raised md-primary pull-right" ui-sref="app.RefModels">

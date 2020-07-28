@@ -170,11 +170,12 @@ function($locationProvider, $stateProvider, $httpProvider,
         })
 
         // main views
-        .state('app.biochem0', {
+        /*.state('app.biochem0', {
             url: "/biochem",
             templateUrl: 'app/views/biochem/biochem0.html',
             controller: 'Biochem'
-        }).state('app.biochem', {
+        })*/
+        .state('app.biochem', {
             url: "/biochem/:chem",
             templateUrl: 'app/views/biochem/biochem.html',
             controller: 'Biochem'
@@ -241,21 +242,16 @@ function($locationProvider, $stateProvider, $httpProvider,
             templateUrl: 'app/views/genomes/genomes.html',
             controller: 'RefModels'
             // authenticate: true
-
-
         }).state('app.media', {
             url: "/list-media/?tab",
             templateUrl: 'app/views/media.html',
             controller: 'Media'
             //authenticate: true
-            
-            
         }).state('app.myMedia', {
             url: "/myMedia/?tab",
             templateUrl: 'app/views/my-media.html',
             controller: 'MyMedia',
             authenticate: true
-            
         }).state('app.myModels', {
             url: "/my-models/",
             templateUrl: 'app/views/my-models.html',

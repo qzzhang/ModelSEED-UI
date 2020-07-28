@@ -32,7 +32,9 @@
 	    </li>
 	       
         <li ng-class="{ active: $state.includes('app.myModels') ||
-                                $state.includes('app.myMedia')}">
+                                $state.includes('app.myMedia') ||
+                                $state.includes('app.subsystem') ||
+                                $state.includes('app.mySubsystems')}">
 	        <a ui-sref="app.myModels">
 	            User Data
 	        </a>

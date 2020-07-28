@@ -1417,7 +1417,7 @@ function($compile, $stateParams) {
             allFamtrees: '=tableAllFamtrees',
             myFamtrees: '=tableMyFamtrees',
             loading: '=tableLoading',
-            isDemo: '@tableIsDemo',
+            isDemo: '=tableIsDemo',
             cellClick: '=tableCellClick',
             hoverClass: '@tableRowHoverClass',
             placeholder: '@tablePlaceholder',
@@ -1846,19 +1846,21 @@ function($compile, $stateParams) {
                     scope.saveInProgress = false;
                     return;
                 }
-                scope.saveAsInProgress = true;
 
                 // show save as dialog, with save/cancel callbacks
+                scope.saveAsInProgress = true;
                 Dialogs.saveAs($ev,
                     function(newName){
                         scope.onSaveAs(Object.values(scope.dataClone), newName)
                         .then(function() {
-                            scope.saveAsInProgres = false;
+                            scope.saveAsInProgress = false;
                             scope.dataSaved = true;
                         });
                     },
                     function() {
-                });
+                        scope.saveAsInProgress = false;
+                        scope.dataSaved = false;
+                    });
             }
 
             scope.cancel = function($event) {
