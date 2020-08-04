@@ -18,6 +18,7 @@ function($scope, $state, $stateParams, Auth, $window) {
     // sets method and changes url param
     $scope.switchMethod = function(method) {
         $scope.method = Auth.loginMethod(method);
+        $scope.inValid = false;
         //$state.go('main.home', {login: method});
     }
 
@@ -254,11 +255,11 @@ function($s, Biochem, $state, $stateParams, MS, Session) {
     $s.$watch('tabs', function(value) { Session.setTab($state, value) }, true)
 
     // Reactions
-    var rxn_sFields = ['id', 'name', 'status', 'synonyms', 'aliases', 'pathways', 'stoichiometry'];
+    var rxn_sFields = ['id', 'name', 'status', 'synonyms', 'aliases', 'pathways', 'stoichiometry', 'notes'];
     $s.rxnOpts = Session.getOpts($state, 'rxns') ||
                   {query: '', limit: 25, offset: 0, sort: {field: 'id'}, core: 'reactions', searchFields: rxn_sFields,
                   visible: ['name', 'id', 'definition', 'deltag', 'deltagerr', 'direction', 'stoichiometry', 'status',
-                            'aliases', 'is_obsolete', 'is_transport', 'ontology', 'pathways'] };
+                            'aliases', 'is_obsolete', 'is_transport', 'ontology', 'pathways', 'notes', 'is_transport'] };
 
     // Compounds
     var cpd_sFields = ['id', 'name', 'formula', 'synonyms', 'aliases', 'ontology'];
@@ -280,8 +281,14 @@ function($s, Biochem, $state, $stateParams, MS, Session) {
             var stoich = r.stoichiometry.replace(/\"/g, '')
             return '<span style="white-space: wrap"'+'stoichiometry-to-eq="'+stoich+'" direction="'+r.direction+'"></span>';
         }},
+        {label: 'Transport', key: 'is_transport', format: function(row){
+            return row.is_transport? 'Yes' : 'No';
+        }},
         {label: 'deltaG', key: 'deltag'},
         {label: 'Status', key: 'status'},
+        {label: 'Notes', key: 'notes', format: function(row){
+            return row.notes.join('|');
+        }},
         {label: 'Synonyms', key: 'synonyms', format: function(row){
             if(row.aliases===undefined || row.aliases.length==0) return "N/A";
             var synms = row.aliases[row.aliases.length -1];
@@ -372,7 +379,6 @@ function($s, Biochem, $state, $stateParams, MS, Session) {
     ];
 
     function updateRxns() {
-        //Biochem.get('model_reaction', $s.rxnOpts)
         Biochem.get_solr('reactions', $s.rxnOpts)
                .then(function(res) {
                     docs = res['docs'];
@@ -387,7 +393,6 @@ function($s, Biochem, $state, $stateParams, MS, Session) {
     }
 
     function updateCpds() {
-        //Biochem.get('model_compound', $s.cpdOpts)
         Biochem.get_solr('compounds', $s.cpdOpts)
                .then(function(res) {
                     $s.cpds = res;
@@ -416,13 +421,12 @@ function($s, Biochem, $state, $stateParams, MS, Session) {
     $s.getBiochemScope = function() {
         return $scope;
     }
-
 }])
 
 
 // WARNING: External resources depend on this.
-.controller('Compound',['$scope', 'Biochem', '$stateParams',
-function($s, Biochem, $stateParams) {
+.controller('Compound',['$scope', 'Biochem', '$state', '$stateParams', 'Session',
+function($s, Biochem, $state, $stateParams, Session) {
     $s.id = $stateParams.id;
     $s.getImagePath = Biochem.getImagePath;
     $s.externalDBs = {
@@ -432,13 +436,13 @@ function($s, Biochem, $stateParams) {
         MetaCyc_c: 'https://biocyc.org/META/NEW-IMAGE?type=COMPOUND&object=', // e.g., https://biocyc.org/META/NEW-IMAGE?type=COMPOUND&object=ATP
         MetaCyc_r: 'https://biocyc.org/META/NEW-IMAGE?type=REACTION&object=' //e.g. https://biocyc.org/META/NEW-IMAGE?type=REACTION&object=INORGPYROPHOSPHAT-RXN
     }
-    // Reactions
-    var cpd_rxn_sFields = ['id', 'name', 'status', 'aliases', 'pathways', 'ontology', 'stoichiometry'];
-    $s.rxnOpts = {query: $s.id, limit: 25, offset: 0, sort: {field: 'id'}, core: 'reactions', searchFields: cpd_rxn_sFields,
+    // cpd_Reactions
+    var cpd_rxn_sFields = ['id', 'name', 'status', 'aliases', 'pathways', 'ontology', 'stoichiometry', 'notes'];
+    $s.cpd_rxnOpts = {query: $s.id, limit: 25, offset: 0, sort: {field: 'id'}, core: 'reactions', searchFields: cpd_rxn_sFields,
                   visible: ['name', 'id', 'definition', 'deltag', 'deltagerr', 'direction', 'stoichiometry', 'status',
-                            'inchikey', 'smiles', 'aliases', 'is_obsolete', 'ontology', 'pathways'] };
+                            'inchikey', 'smiles', 'aliases', 'is_obsolete', 'ontology', 'pathways', 'notes', 'is_transport'] };
 
-    $s.rxnHeader = [
+    $s.cpd_rxnHeader = [
         {label: 'ID', key: 'id', format: function(row) {
             var comment_str = '&nbsp;&nbsp;<md-button class="md-fab" ng-disabled="false" aria-label="Comment" ng-click="leaveComment($event, \''+row.id+'\', \'rxn\')">';
             comment_str += '<md-tooltip>Add Comments</md-tooltip>';
@@ -451,8 +455,14 @@ function($s, Biochem, $stateParams) {
             var stoich = r.stoichiometry.replace(/\"/g, '')
             return '<span style="white-space: wrap;"'+'stoichiometry-to-eq="'+stoich+'" direction="'+r.direction+'"></span>';
         }},
+        {label: 'Transport', key: 'is_transport', format: function(row){
+            return row.is_transport? 'Yes' : 'No';
+        }},
         {label: 'deltaG', key: 'deltag'},
         {label: 'Status', key: 'status'},
+        {label: 'Notes', key: 'notes', format: function(row){
+            return row.notes.join('|');
+        }},
         {label: 'Synonyms', key: 'synonyms', format: function(row){
             if(row.aliases===undefined || row.aliases.length==0) return "N/A";
             var synms= row.aliases[row.aliases.length -1];
@@ -498,7 +508,6 @@ function($s, Biochem, $stateParams) {
     ];
 
     $s.loading = true;
-    // Biochem.getCpd($s.id)
     Biochem.getCpd_solr($s.id)
         .then(function(data) {
             data.synm = data.aliases.shift().replace('Name:', '');
@@ -511,12 +520,23 @@ function($s, Biochem, $stateParams) {
             $s.cpd = data;
             $s.loading = false;
         })
-    Biochem.findReactions_solr($s.id, cpd_rxn_sFields)
-        .then(function(res) {
-            $s.rxns = res;
-            $s.loadingRxns = false;
-            $s.enableColumnSearch = false;
-        })
+
+    function updateCpdRxns() {
+        Biochem.findReactions_solr($s.id, $s.cpd_rxnOpts, '*')
+            .then(function(res) {
+                $s.cpd_rxns = res;
+                $s.loadingcpd_Rxns = false;
+                $s.enableColumnSearch = false;
+            })
+    }
+
+    $s.$watch('cpd_rxnOpts', function(after, before) {
+        console.log('after', after);
+        $s.loadingcpd_Rxns = true;
+        $s.loading = false;
+        updateCpdRxns();
+        Session.setOpts($state, 'cpd_rxns', after);
+    }, true)
 }])
 
 // WARNING: External resources depend on this.
@@ -526,7 +546,6 @@ function($s, Biochem, $stateParams) {
     $s.getImagePath = Biochem.getImagePath;
 
     $s.loading = true;
-    // Biochem.getRxn($s.id)
     Biochem.getRxn_solr($s.id)
         .then(function(data) {
             if (data['is_obsolete'] == "1") {
@@ -558,8 +577,6 @@ function($s, Biochem, $stateParams) {
             $s.loading = false;
         })
 }])
-
-
 
 .controller('BiochemViewer',['$scope', 'Biochem', '$state', '$stateParams',
 function($s, Biochem, $state, $stateParams) {
@@ -1609,7 +1626,6 @@ MV, $document, $mdSidenav, $q, $timeout, ViewOptions, Auth, $http, $mdDialog) {
     $scope.MS = MS;
     $scope.MV = MV;
     $scope.uiTools = uiTools;
-    
     MV.makePublic( true );
     
     $scope.relativeTime = uiTools.relativeTime;
@@ -1618,7 +1634,7 @@ MV, $document, $mdSidenav, $q, $timeout, ViewOptions, Auth, $http, $mdDialog) {
         return $scope.relativeTime(Date.parse(datetime));
     }
 
-    // for use by toolbar.html
+    // for use by popup SignIn windows in main-toolbar and toolbar.html
     $scope.signin = function() {
         if(!Auth.isAuthenticated()) {
             AuthDialog.signIn();

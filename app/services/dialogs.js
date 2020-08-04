@@ -1058,7 +1058,8 @@ function($rootScope, $dialog, $window, $timeout, Auth, $stateParams) {
                 // sets method and changes url param
                 $s.switchMethod = function(method) {
                     $s.method = Auth.loginMethod(method);
-                    $state.go($state.current.name, {login: method});
+                    $stateParams.login = method;
+                    $s.inValid = false;
                 }
 
                 $s.ok = function(){

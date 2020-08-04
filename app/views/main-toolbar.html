@@ -67,8 +67,10 @@
             </a>
         </li>
 
-        <div ng-controller="RefModels">
-            <md-button ng-if="!$root.user" class="md-raised md-primary pull-right" ng-click="signin()">
+        <div>
+            <md-button ng-if="!$root.user"
+                       class="md-raised md-primary pull-right" ng-controller="RefModels"
+                       ng-click="signin()">
                 Sign In
             </md-button>
             <md-button ng-if="$root.user"  class="md-raised md-primary pull-right" ui-sref="app.RefModels">
