@@ -216,11 +216,16 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
 
     // Parse the given data for the subsystem data structure
     function parseSubsysData(obj_data) {
-        // convert the subsystem data into an array of objects from an array of arrays
-        // returns an array of objects, where each object represents a row of data in the subsystem table:
+        // convert the subsystem data into
+        // 1) an array that holds "Genome" as its first element and the function roles after that, the "caption" array;
+        // 2) an object of key-value pairs where 'key' is the function role and 'value' holds the protein families;
+        // 3) an array of objects parsed from an array of arrays, where each object represents a row of data in the
+        // subsystem table:
         // The first row of data is the respective reactions where each function role (column caption) is associated.
         // The rows after the first consist of gene annotation details in arrays of geneIds under the categories of
         // 'curation'/'candidates'/'predictions'
+        //    "caption" of the column serving as the key.
+        //
         var caps = ["Genome"], families = {};
         // fetching the subsystem head captions and family trees
         for (var i0=1; i0<obj_data[0].length; i0++) {
@@ -232,9 +237,9 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         }
         var data = [];
         for (var i=1; i<obj_data.length; i++) {
-            data[i-1] = {};
+            data[i-1] = {};  // a row of data
             for (var j=0; j<caps.length; j++) {
-                data[i-1][caps[j]] = obj_data[i][j];
+                data[i-1][caps[j]] = obj_data[i][j];  // a column identified by the function role as key
             }
         }
         $s.captions = caps;

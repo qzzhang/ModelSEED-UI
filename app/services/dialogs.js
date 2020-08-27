@@ -150,7 +150,8 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                                            "score": s};
                     cb(edit_gene);
                     $s.score = s;
-                    $s.updatingScore = false, $s.editingScore = false;
+                    $s.updatingScore = false;
+                    $s.editingScore = false;
                 }
 
                 $s.validateNumber = function(text) {

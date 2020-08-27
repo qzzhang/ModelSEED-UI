@@ -1498,8 +1498,8 @@ function($compile, $stateParams) {
                         Dialogs.showFuncFamTree(ev, scope.subsysName, func_name, tree_name,
                                                 scope.downloadURL, scope.xmldoc, scope.sXML,
                             function(tree_msg) {
-                            // alert(func_name + ' calling back from tree display--' + tree_msg);
-                        });
+                                // alert(func_name + ' calling back from tree display--' + tree_msg);
+                            });
                     })
                 }
                 else if (scope.isDemo == "true") {
@@ -1507,7 +1507,7 @@ function($compile, $stateParams) {
                     Dialogs.showFuncFamTree(ev, scope.subsysName, func_name, tree_name,
                                             scope.downloadURL, scope.xmldoc, scope.sXML,
                         function(tree_msg) {
-                    });
+                        });
                 }
                 scope.loadingFamTreeFailed = false;
                 scope.errLoadingFamTree = '';
@@ -1628,6 +1628,8 @@ function($compile, $stateParams) {
             var updateAnnotationInTree = function(func, col_id) {
                 var xmldoc = scope.treeData.cloneNode(true);
                 var dKeys = Object.keys(scope.dataClone);
+
+                // convert html DOM dropdown box options into three object arrays
                 for (var r=1; r<dKeys.length-1; r++) { // r=1 skip header
                     var row_col = 'row' + r.toString() + '_col' + col_id.toString();
                     var can_id = 'can_' + row_col, cur_id = 'cur_' + row_col, pre_id = 'pre_' + row_col;
@@ -1639,6 +1641,7 @@ function($compile, $stateParams) {
                     if (document.getElementById(pre_id) !== null)
                         pre_arr = document.getElementById(pre_id).options;
 
+                    // map the above object arrays with the xmldoc nodes
                     if (can_arr != [])
                         xmldoc = mapAnnotations(xmldoc, 'name', can_arr, cur_arr, pre_arr);
                 }
@@ -1676,10 +1679,10 @@ function($compile, $stateParams) {
 
             // run through the annotation arrays to find gene_name matches
             // looping through these three arrays--if gene is in cur_arr, then green color
-            // will be assigned to that the 'clade' node; if gene is in pre_arr, then blue
-            // color will be assigned to that the 'clade' node; if gene is not in either
-            // cur_arr or pre_arr, red color will be assigned to that the 'clade' node;
-            // otherwise, black color will be assigned to that the 'clade' node.
+            // will be assigned to that 'clade' node; if gene is in pre_arr, then blue
+            // color will be assigned to that 'clade' node; if gene is not in either
+            // cur_arr or pre_arr, red color will be assigned to that 'clade' node;
+            // otherwise, black color will be assigned to that 'clade' node.
             function mapAnnotations(xmldoc, tagName, can_arr, cur_arr, pre_arr) {
                 // get the `phylogeny` node as the root
                 var tree = xmldoc.firstChild.childNodes[0];
@@ -1695,18 +1698,20 @@ function($compile, $stateParams) {
                     for (var k3=0; k3<pre_arr.length; k3++) {
                         pre_genes[k3] = pre_arr[k3].text;
                     }
+                    // tagname (e.g., 'name') is the name of one of the tags/nodes of a 'clade' node
                     var nodes = tree.getElementsByTagName(tagName);
                     for (var i=0; i<nodes.length; i++) {
-                        if (nodes[i].childNodes.length > 0) {
-                            var gene_name = nodes[i].innerHTML;
-                            var parnt = nodes[i].parentNode;
+                        var  node = nodes[i];
+                        if (node.childNodes.length > 0) {
+                            var gene_name = node.innerHTML;
+                            var parnt = node.parentNode;
                             var colr = '', score = 0;
                             for (var j=0; j<can_genes.length; j++) {
-                                if (gene_name.indexOf(can_genes[j]) >= 0) {// found gene in annotation
-                                    colr = '0xFF0000';  // 'red'; // default color, not in curation or prediction
-                                    if (cur_genes.includes(can_genes[j])) colr = '0x00FF00';  // 'green';
-                                    else if (pre_genes.includes(can_genes[j])) colr = '0x0000FF';  // 'blue';
-                                    // Because `sepeciations` can only take nonNegativeInteger values
+                                if (gene_name.indexOf(can_genes[j]) >= 0) { // found annotation in gene_name
+                                    colr = '0xFF0000';  // 'red'; default color, not in curation or prediction
+                                    if (cur_genes.includes(can_genes[j])) colr = '0x00FF00';  // 'green'; present in cur_genes
+                                    // else if (pre_genes.includes(can_genes[j])) colr = '0x0000FF';  // 'blue'; present in pre_genes
+                                    // Because `sepeciations` can only take nonNegativeInteger values, use toFixed(2)*100 number
                                     score = Number(can_arr[j]['value']).toFixed(2)*100;
                                     break;
                                 }
