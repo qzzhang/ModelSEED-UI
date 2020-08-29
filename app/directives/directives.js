@@ -1497,8 +1497,8 @@ function($compile, $stateParams) {
                                                      xmlDownloadURL: scope.downloadURL});*/
                         Dialogs.showFuncFamTree(ev, scope.subsysName, func_name, tree_name,
                                                 scope.downloadURL, scope.xmldoc, scope.sXML,
-                            function(tree_msg) {
-                                // alert(func_name + ' calling back from tree display--' + tree_msg);
+                            function(selectedGenes) {
+                                alert(func_name + ' calling back from tree display--' + JSON.stringify(selectedGenes));
                             });
                     })
                 }

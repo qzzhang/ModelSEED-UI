@@ -49,7 +49,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     $s.savingMeta = true;
                     WS.saveMeta($s.meta[2] + $s.meta[0], meta)
                       .then(function(newMeta) {
-                          $s.userMeta = JSON.stringify(newMeta, null, 4);;
+                          $s.userMeta = JSON.stringify(newMeta, null, 4);
                           $s.editMeta = false, $s.savingMeta = false;
                       })
                 }
@@ -187,6 +187,16 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.functionName = func;
                 $s.treeName = tree;
                 $s.sXML = sXML;
+                $s.selectedTreeNodes = [];
+                $s.tree = {
+                    branchset: [],
+                    properties: [],
+                    taxonomies: [],
+                    sequences: [],
+                    confidences: [],
+                    references: [],
+                    branchLength: 0.0
+                };
                 $s.cssText1 = "max-width:1500px;width:100%;height:100%;overflow:hidden;";
                 $s.cssText2 = "max-width:1500px;width:100%;height:100%;overflow:hidden;";
 
@@ -202,6 +212,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     dynamicHide: false,
                     height: 800,
                     popupWidth: 300,
+                    //popupAction: $s.updateSelectedNodes,
                     invertColors: false,
                     lineupNodes: true,
                     showDomains: true,
@@ -240,7 +251,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 var tree = phyd3.phyloxml.parse(phyloxml);
                 phyd3.phylogram.build("#phyd3", tree, $s.opts);
                 */
-                //**for reading the test.xml file and then in the callback pass phyloxml doc WORKS!
+                //**First reading the phylo_example_1.xml file and then in the callback pass phyloxml doc WORKS!
                 xml_file = "app/components/proteinFam/xmls/phylo_example_1.xml";
                 d3.xml(xml_file, "application/xml",
                 function(xml) {
@@ -248,7 +259,6 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     // var tree = phyd3.phyloxml.parse(xml);
                     setContent($s.opts);
                 });
-                //*/
 
                 $s.minimize = function() {
                     $s.cssText1 = "overflow:hidden;";
@@ -267,8 +277,57 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         $s.maximize();
                 }
 
+                var addToSelectedNodes = function(nd) {
+                    if (!$s.selectedTreeNodes.find(ele => ele.indexOf(nd) >= 0)) {
+                        $s.selectedTreeNodes.push(nd);
+                    }
+                }
+
+                var getBranchNodeNames = function(brch_arr) {
+                    if(brch_arr && brch_arr.length === 0) {
+                        return true;
+                    }
+                    brch_arr.forEach((brch) => {
+                        addToSelectedNodes(brch.name);
+                        sub_branches = brch['branchset'];
+                        getBranchNodeNames(sub_branches);
+                    })
+                }
+
+                var searchNameInPhylotreeById = function(varToSearch, phylotree) {
+                    var ret_name = '';
+                    if(phylotree['id'] === varToSearch) {
+                        ret_name = phylotree['name'];
+                        // console.log('node name: '+ret_name+' for node id: '+varToSearch);
+                        addToSelectedNodes(ret_name);
+                        var sub_tree = phylotree['branchset'];  // subtree
+                        getBranchNodeNames(sub_tree);
+                        return true;
+                    }
+
+                    var branch_arr = phylotree['branchset'];  // subtree
+                    branch_arr.forEach((branch) => {
+                        searchNameInPhylotreeById(varToSearch, branch);
+                    })
+                }
+
+                $s.refreshAnnotation = function() {
+                    $s.selectedTreeNodes = [];
+                    if ($s.opts.pinnedNodes) {
+                        // parse for selected tree node names from ids for $s.selectedTreeNodes.toString());
+                        for (var ni = 0; ni < $s.opts.pinnedNodes.length; ni++) {
+                            var t_id = $s.opts.pinnedNodes[ni];
+                            searchNameInPhylotreeById(t_id, $s.tree);
+                        }
+                        console.log(' tree displayed and selected tree nodes: ' + JSON.stringify($s.selectedTreeNodes));
+                        cb($s.selectedTreeNodes);
+                    } else {
+                        console.log('tree displayed without selecting any tree node.');
+                        cb([]);
+                    }
+                }
+
                 $s.cancel = function() {
-                    cb(func + ' tree displayed');
                     $dialog.hide();
                 }
 
@@ -278,6 +337,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         dynamicHide: false,
                         height: 800,
                         popupWidth: 300,
+                        //popupAction: updateSelectedNodes,
                         invertColors: false,
                         lineupNodes: true,
                         showDomains: true,
@@ -305,8 +365,9 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
 
                 function setContent(opts) {
                     d3.select("#phyd3").text(null);
-                    var tree = phyd3.phyloxml.parse(phyloxml);
-                    phyd3.phylogram.build("#phyd3", tree, opts);
+                    $s.tree = phyd3.phyloxml.parse(phyloxml);
+                    // console.log('****The parsed phylotree by phyD3:'+JSON.stringify($s.tree));
+                    phyd3.phylogram.build("#phyd3", $s.tree, opts);
                 }
             }]
         })
