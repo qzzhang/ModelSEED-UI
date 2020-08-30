@@ -1495,8 +1495,7 @@ function($compile, $stateParams) {
                         $state.go('app.familyTree', {subsysName:scope.subsysName,roleName:func_name,
                                                      treeName: tree_name, sXML: scope.sXML,
                                                      xmlDownloadURL: scope.downloadURL});*/
-                        Dialogs.showFuncFamTree(ev, scope.subsysName, func_name, tree_name,
-                                                scope.downloadURL, scope.xmldoc, scope.sXML,
+                        Dialogs.showFuncFamTree(ev, func_name, tree_name, scope.downloadURL, scope.xmldoc,
                             function(selectedGenes) {
                                 alert(func_name + ' calling back from tree display--' + JSON.stringify(selectedGenes));
                             });
@@ -1504,9 +1503,9 @@ function($compile, $stateParams) {
                 }
                 else if (scope.isDemo == "true") {
                     scope.downloadURL = '';
-                    Dialogs.showFuncFamTree(ev, scope.subsysName, func_name, tree_name,
-                                            scope.downloadURL, scope.xmldoc, scope.sXML,
-                        function(tree_msg) {
+                    Dialogs.showFuncFamTree(ev, func_name, tree_name, scope.downloadURL, scope.xmldoc,
+                        function(selectedGenes) {
+                            alert(func_name + ' calling back from tree display--' + JSON.stringify(selectedGenes));
                         });
                 }
                 scope.loadingFamTreeFailed = false;
