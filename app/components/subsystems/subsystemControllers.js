@@ -285,9 +285,9 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
             prediction_scores[i] = {};
             candidate_scores[i] = {};
             var indata = input_data[i];
-            var key_arr = Object.keys(indata);
+            var key_arr = Object.keys(indata);  // captions for the row of genome & functional roles
             for (var k = 1; k<key_arr.length; k++) { // k=1 to skip masking the genome column
-                key = key_arr[k];
+                key = key_arr[k];  // one column at a time
                 curation_roles[i][key] = [];
                 prediction_roles[i][key] = [];
                 candidate_roles[i][key] = [];
@@ -299,7 +299,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                     Object.keys(val).forEach(function(sub_key) {
                         switch(sub_key) {
                             case 'curation':
-                              // curation roles
+                              // curation genes
                               Object.keys(val[sub_key]).forEach(function(ssubK) {
                                 var curk_arr = Object.keys(val[sub_key][ssubK]);
                                 var curv_arr = Object.values(val[sub_key][ssubK]);
@@ -308,7 +308,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                               });
                               break;
                             case 'prediction':
-                              // prediction roles
+                              // prediction genes
                               Object.keys(val[sub_key]).forEach(function(ssubK) {
                                 var prek_arr = Object.keys(val[sub_key][ssubK]);
                                 var prev_arr = Object.values(val[sub_key][ssubK]);
@@ -317,7 +317,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                               });
                               break;
                             case 'candidates':
-                              // candidate roles
+                              // candidate genes
                               Object.keys(val[sub_key]).forEach(function(ssubK) {
                                 var cank_arr = Object.keys(val[sub_key][ssubK]);
                                 var canv_arr = Object.values(val[sub_key][ssubK]);

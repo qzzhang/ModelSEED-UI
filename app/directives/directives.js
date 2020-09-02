@@ -1,4 +1,3 @@
-
 angular.module('core-directives', []);
 angular.module('core-directives')
 
@@ -1452,6 +1451,8 @@ function($compile, $stateParams) {
                     col_id = cell_info['col_id'];
                 scope.sel_cand = document.getElementById(can_id);
 
+                // Note: Because in scope.dataClone, row 0 data is for Genom & function roles and row 1 is for reactions,
+                //       with row 0 as the table header, row 1 in the table should bare the data of row 2 in scope.dataClone
                 Dialogs.showGene(ev, scope.dataClone[row_id+1][col_id]["candidates"][scope.sel_cand.selectedIndex],
                 function(gene) {
                     console.log('modified gene object: ', JSON.stringify(gene));
@@ -1475,9 +1476,12 @@ function($compile, $stateParams) {
                     loadPhyloXML_demo(treeName, func_name, col_id, ev);
                 else
                     loadPhyloXML(treeName, func_name, col_id, ev);
+
+                ev.stopPropagation();
+                ev.preventDefault();
             }
 
-            function fetchDownloadURL(ev, tree_name, func_name) {
+            function fetchDownloadURL(ev, tree_name, func_name, col_id) {
                 var fpath = '';
                 for (var i=0; i<scope.allFamtrees.length; i++) {
                     if (scope.allFamtrees[i]['treeName'] == tree_name) {
@@ -1498,6 +1502,7 @@ function($compile, $stateParams) {
                         Dialogs.showFuncFamTree(ev, func_name, tree_name, scope.downloadURL, scope.xmldoc,
                             function(selectedGenes) {
                                 alert(func_name + ' calling back from tree display--' + JSON.stringify(selectedGenes));
+                                addGenesFromFuncTree(selectedGenes, col_id);
                             });
                     })
                 }
@@ -1549,7 +1554,7 @@ function($compile, $stateParams) {
                             .then(function(xmldoc) {
                                 scope.xmldoc = xmldoc;
                                 scope.sXML = oSerializer.serializeToString(xmldoc);
-                                fetchDownloadURL(ev, treeName, func_name);
+                                fetchDownloadURL(ev, treeName, func_name, col_id);
                                 ev.stopPropagation();
                                 ev.preventDefault();
                                 scope.loadingFamTreeFailed = false;
@@ -1605,7 +1610,7 @@ function($compile, $stateParams) {
                             .then(function(xmldoc) {
                                 scope.xmldoc = xmldoc;
                                 scope.sXML = oSerializer.serializeToString(xmldoc);
-                                fetchDownloadURL(ev, treeName, func_name);
+                                fetchDownloadURL(ev, treeName, func_name, col_id);
                                 ev.stopPropagation();
                                 ev.preventDefault();
                                 scope.loadingFamTreeFailed = false;
@@ -1621,6 +1626,74 @@ function($compile, $stateParams) {
                     scope.loadingFamTreeFailed = true;
                     scope.loadingFamTree = false;
                 });
+            }
+
+            // add the selected input genes to the subsystem data in column numbered col_id
+            var addGenesFromFuncTree = function(tree_genes, col_id) {
+                var dKeys = Object.keys(scope.dataClone);
+                for (var r=1; r<dKeys.length-1; r++) { // r=1 skip header
+                    var row_col = 'row' + r.toString() + '_col' + col_id.toString();
+                    var can_id = 'can_' + row_col, pre_id = 'pre_' + row_col;
+                    var can_opts = [], pre_opts = [];
+                    if (document.getElementById(can_id) !== null)
+                        can_opts = document.getElementById(can_id).options;
+                    if (document.getElementById(pre_id) !== null)
+                        pre_opts = document.getElementById(pre_id).options;
+
+                    // add tree_genes to the prediction of the current cell (r, col_id)
+                    if (can_opts != [])
+                       addTreeGenes(tree_genes, can_opts, pre_opts, r, col_id, can_id, pre_id);
+                }
+            }
+
+            var addTreeGenes = function(genes, cans, pres, row_id, col_id, can_id, pre_id) {
+                // fetch the gene names from the html dropdown boxes (options)
+                var can_genes = [], cur_genes = [], pre_genes = [];
+                for (var k1=0; k1<cans.length; k1++) {
+                    can_genes[k1] = cans[k1].text;
+                }
+                for (var k2=0; k2<pres.length; k2++) {
+                    pre_genes[k2] = pres[k2].text;
+                }
+
+                // prediction dropdown of the cell (row_id, col_id)
+                var sel_pre = document.getElementById(pre_id);
+                // genome in subsystem data
+                var genome = scope.dataClone[row_id+1][0];
+
+                // adding the selected genes with conditions
+                for( var gi=0; gi<genes.length; gi++) {
+                    var gm = genes[gi].split('|_|')[0],  // genome in tree gene string
+                        gn = genes[gi].split('|_|')[1];  // gene in tree gene string
+
+                    if (gn != undefined && gm.indexOf(genome) != -1) {
+                        // adding gn to both the html dropdown and to the dataClone json object
+                        if( (can_genes && can_genes.indexOf(gn) != -1) &&
+                            ((pre_genes && pre_genes.indexOf(gn) == -1) || pre_genes == []) ) {
+                            alert("This gene is not in prediction yet: " +gn);
+                            // create a new option element
+                            var new_opt = document.createElement('option');
+                            // create text node to add to option element (new_opt)
+                            new_opt.appendChild( document.createTextNode(gn) );
+                            // set value property of new_opt with the option's values from candidates
+                            for( var k3=0; k3<cans.length; k3++) {
+                                if( cans[k3].text == gn) {
+                                    new_opt.value = cans[k3].value;
+                                    break;
+                                }
+                            }
+                            // add opt to end of the prediction dropdown
+                            sel_pre.appendChild(new_opt);
+                            scope.dataModified = true;
+                        }
+                    }
+                }
+                if( scope.dataModified ) {
+                    updateCloneData(pre_id);
+                    sortOptions(sel_pre);
+                    updateOptionColor(can_id);
+                    scope.dataSaved = false;
+                }
             }
 
             // Modify the XML data structure according to the annotations in column (col_id)
@@ -1709,7 +1782,7 @@ function($compile, $stateParams) {
                                 if (gene_name.indexOf(can_genes[j]) >= 0) { // found annotation in gene_name
                                     colr = '0xFF0000';  // 'red'; default color, not in curation or prediction
                                     if (cur_genes.includes(can_genes[j])) colr = '0x00FF00';  // 'green'; present in cur_genes
-                                    // else if (pre_genes.includes(can_genes[j])) colr = '0x0000FF';  // 'blue'; present in pre_genes
+                                    else if (pre_genes.includes(can_genes[j])) colr = '0x0000FF';  // 'blue'; present in pre_genes
                                     // Because `sepeciations` can only take nonNegativeInteger values, use toFixed(2)*100 number
                                     score = Number(can_arr[j]['value']).toFixed(2)*100;
                                     break;
@@ -1888,12 +1961,14 @@ function($compile, $stateParams) {
                     col_id = cell_info['col_id'];
 
                 var sel_opts = document.getElementById(sel_id).options;
-                var sel_data = []; //arrays of objects
+                var sel_data = [];  // array of objects
                 for (var i=0; i<sel_opts.length; i++) {
                     var sel = {};
                     sel[sel_opts[i].text] = {"score": sel_opts[i].value};
                     sel_data.push(sel);
                 }
+                // Note: Because in scope.dataClone, row 0 data is for Genom & function roles and row 1 is for reactions,
+                //       with row 0 as the table header, row 1 in the table should bare the data of row 2 in scope.dataClone
                 scope.dataClone[row_id+1][col_id][gene_group_name] = sel_data;
             }
 
@@ -1912,7 +1987,7 @@ function($compile, $stateParams) {
                     case "pre":
                         gene_grp = 'prediction';
                         break;
-                    case "cand":
+                    case "can":
                         gene_grp = 'candidates';
                         break;
                     default:
@@ -1966,7 +2041,9 @@ function($compile, $stateParams) {
 
                 var cur_optTexts = [], cand_optTexts = [], pre_optTexts = [];
 
-                for (var k = 0; k < cand_opts.length; k++) cand_optTexts.push(cand_opts[k].text);
+                for (var k = 0; k < cand_opts.length; k++) {
+                    cand_optTexts.push(cand_opts[k].text);
+                }
 
                 if (cur_opts == 0 && pre_opts == 0) {
                     for (var k1 = 0; k1<cand_opts.length; k1++) {
