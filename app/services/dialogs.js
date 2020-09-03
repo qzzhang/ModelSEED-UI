@@ -186,6 +186,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.functionName = func;
                 $s.treeName = tree;
                 $s.selectedTreeNodes = [];
+                $s.pinnedNodes = [];
                 $s.tree = {
                     branchset: [],
                     properties: [],
@@ -210,6 +211,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     dynamicHide: false,
                     height: 800,
                     popupWidth: 300,
+                    pinnedNodes: [],
                     //popupAction: $s.updateSelectedNodes,
                     invertColors: false,
                     lineupNodes: true,
@@ -275,31 +277,32 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         $s.maximize();
                 }
 
-                var addToSelectedNodes = function(nd) {
+                var addSelectedNodes = function(nd) {
                     if (!$s.selectedTreeNodes.find(ele => ele.indexOf(nd) >= 0)) {
                         $s.selectedTreeNodes.push(nd);
                     }
                 }
 
                 var getBranchNodeNames = function(brch_arr) {
-                    if(brch_arr && brch_arr.length === 0) {
+                    if(brch_arr.length === 0) {
                         return true;
                     }
                     brch_arr.forEach((brch) => {
-                        addToSelectedNodes(brch.name);
+                        addSelectedNodes(brch.name);
                         sub_branches = brch['branchset'];
                         getBranchNodeNames(sub_branches);
                     })
                 }
 
                 var searchNameInPhylotreeById = function(varToSearch, phylotree) {
-                    var ret_name = '';
-                    if(phylotree['id'] === varToSearch) {
-                        ret_name = phylotree['name'];
+                    if(phylotree['id'] && phylotree['id'] === varToSearch) {
+                        var ret_name = phylotree['name'];
                         // console.log('node name: '+ret_name+' for node id: '+varToSearch);
-                        addToSelectedNodes(ret_name);
+                        addSelectedNodes(ret_name);
                         var sub_tree = phylotree['branchset'];  // subtree
-                        getBranchNodeNames(sub_tree);
+                        if(sub_tree) {
+                            getBranchNodeNames(sub_tree);
+                        }
                         return true;
                     }
 
@@ -309,7 +312,8 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     })
                 }
 
-                $s.refreshAnnotation = function() {
+                //$s.$watch('$s.opts.pinnedNodes', function(opts) {
+                var updateSelectedTreeNodes = function() {
                     $s.selectedTreeNodes = [];
                     if ($s.opts.pinnedNodes) {
                         // parse for selected tree node names from ids for $s.selectedTreeNodes.toString());
@@ -318,11 +322,12 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                             searchNameInPhylotreeById(t_id, $s.tree);
                         }
                         console.log(' tree displayed and selected tree nodes: ' + JSON.stringify($s.selectedTreeNodes));
-                        cb($s.selectedTreeNodes);
-                    } else {
-                        console.log('tree displayed without selecting any tree node.');
-                        cb([]);
                     }
+                }//, true)
+
+                $s.refreshAnnotation = function() {
+                    updateSelectedTreeNodes();
+                    cb($s.selectedTreeNodes);
                 }
 
                 $s.cancel = function() {
@@ -335,6 +340,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         dynamicHide: false,
                         height: 800,
                         popupWidth: 300,
+                        pinnedNodes: [],
                         //popupAction: updateSelectedNodes,
                         invertColors: false,
                         lineupNodes: true,
@@ -362,6 +368,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 }
 
                 function setContent(opts) {
+                    $s.pinnedNodes = opts.pinnedNodes;
                     d3.select("#phyd3").text(null);
                     $s.tree = phyd3.phyloxml.parse(phyloxml);
                     // console.log('****The parsed phylotree by phyD3:'+JSON.stringify($s.tree));

@@ -1502,7 +1502,9 @@ function($compile, $stateParams) {
                         Dialogs.showFuncFamTree(ev, func_name, tree_name, scope.downloadURL, scope.xmldoc,
                             function(selectedGenes) {
                                 alert(func_name + ' calling back from tree display--' + JSON.stringify(selectedGenes));
-                                addGenesFromFuncTree(selectedGenes, col_id);
+                                if(selectedGenes.length > 0) {
+                                    addGenesFromFuncTree(selectedGenes, col_id);
+                                }
                             });
                     })
                 }
@@ -1633,24 +1635,24 @@ function($compile, $stateParams) {
                 var dKeys = Object.keys(scope.dataClone);
                 for (var r=1; r<dKeys.length-1; r++) { // r=1 skip header
                     var row_col = 'row' + r.toString() + '_col' + col_id.toString();
-                    var can_id = 'can_' + row_col, pre_id = 'pre_' + row_col;
-                    var can_opts = [], pre_opts = [];
-                    if (document.getElementById(can_id) !== null)
-                        can_opts = document.getElementById(can_id).options;
+                    var cur_id = 'cur_' + row_col, pre_id = 'pre_' + row_col;
+                    var cur_opts = [], pre_opts = [];
+                    if (document.getElementById(cur_id) !== null)
+                        cur_opts = document.getElementById(cur_id).options;
                     if (document.getElementById(pre_id) !== null)
                         pre_opts = document.getElementById(pre_id).options;
 
                     // add tree_genes to the prediction of the current cell (r, col_id)
-                    if (can_opts != [])
-                       addTreeGenes(tree_genes, can_opts, pre_opts, r, col_id, can_id, pre_id);
+                    if (cur_opts != [])
+                       addTreeGenes(tree_genes, cur_opts, pre_opts, r, col_id, cur_id, pre_id);
                 }
             }
 
-            var addTreeGenes = function(genes, cans, pres, row_id, col_id, can_id, pre_id) {
+            var addTreeGenes = function(genes, curs, pres, row_id, col_id, cur_id, pre_id) {
                 // fetch the gene names from the html dropdown boxes (options)
                 var can_genes = [], cur_genes = [], pre_genes = [];
-                for (var k1=0; k1<cans.length; k1++) {
-                    can_genes[k1] = cans[k1].text;
+                for (var k1=0; k1<curs.length; k1++) {
+                    cur_genes[k1] = curs[k1].text;
                 }
                 for (var k2=0; k2<pres.length; k2++) {
                     pre_genes[k2] = pres[k2].text;
@@ -1658,6 +1660,8 @@ function($compile, $stateParams) {
 
                 // prediction dropdown of the cell (row_id, col_id)
                 var sel_pre = document.getElementById(pre_id);
+                // curation dropdown of the cell (row_id, col_id)
+                var sel_cur = document.getElementById(cur_id);
                 // genome in subsystem data
                 var genome = scope.dataClone[row_id+1][0];
 
@@ -1667,8 +1671,7 @@ function($compile, $stateParams) {
                         gn = genes[gi].split('|_|')[1];  // gene in tree gene string
 
                     if (gn != undefined && gm.indexOf(genome) != -1) {
-                        // adding gn to both the html dropdown and to the dataClone json object
-                        if( (can_genes && can_genes.indexOf(gn) != -1) &&
+                        if( (cur_genes && cur_genes.indexOf(gn) != -1) &&
                             ((pre_genes && pre_genes.indexOf(gn) == -1) || pre_genes == []) ) {
                             alert("This gene is not in prediction yet: " +gn);
                             // create a new option element
@@ -1676,22 +1679,25 @@ function($compile, $stateParams) {
                             // create text node to add to option element (new_opt)
                             new_opt.appendChild( document.createTextNode(gn) );
                             // set value property of new_opt with the option's values from candidates
-                            for( var k3=0; k3<cans.length; k3++) {
-                                if( cans[k3].text == gn) {
-                                    new_opt.value = cans[k3].value;
+                            for( var k3=0; k3<curs.length; k3++) {
+                                if( curs[k3].text == gn) {
+                                    new_opt.value = curs[k3].value;
+                                    // removing the opt from curation dropdown and from the dataClone json object 
+                                    sel_cur.removeChild(curs[k3]);
                                     break;
                                 }
                             }
-                            // add opt to end of the prediction dropdown
+                            // add new_opt to end of the prediction dropdown
                             sel_pre.appendChild(new_opt);
                             scope.dataModified = true;
                         }
                     }
                 }
                 if( scope.dataModified ) {
+                    // adding gn to prediction and removing it from curation in the dataClone json object
                     updateCloneData(pre_id);
+                    updateCloneData(cur_id);
                     sortOptions(sel_pre);
-                    updateOptionColor(can_id);
                     scope.dataSaved = false;
                 }
             }
@@ -1781,8 +1787,8 @@ function($compile, $stateParams) {
                             for (var j=0; j<can_genes.length; j++) {
                                 if (gene_name.indexOf(can_genes[j]) >= 0) { // found annotation in gene_name
                                     colr = '0xFF0000';  // 'red'; default color, not in curation or prediction
-                                    if (cur_genes.includes(can_genes[j])) colr = '0x00FF00';  // 'green'; present in cur_genes
-                                    else if (pre_genes.includes(can_genes[j])) colr = '0x0000FF';  // 'blue'; present in pre_genes
+                                    if (pre_genes.includes(can_genes[j])) colr = '0x0000FF';  // 'blue'; present in pre_genes
+                                    else if (cur_genes.includes(can_genes[j])) colr = '0x00FF00';  // 'green'; present in cur_genes
                                     // Because `sepeciations` can only take nonNegativeInteger values, use toFixed(2)*100 number
                                     score = Number(can_arr[j]['value']).toFixed(2)*100;
                                     break;

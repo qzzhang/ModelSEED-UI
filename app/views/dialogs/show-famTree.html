@@ -369,8 +369,16 @@
             Open tree in a separate page
        </a-->
 
+      <md-list>
+        <md-list-item class="md-2-line" ng-repeat="node in selectedTreeNodes">
+          <div class="md-list-item-text">
+            <h3>{{node}}</h3>
+          </div>
+        </md-list-item>
+      </md-list>
+
         <md-button ng-click="refreshAnnotation()">
-            Add Selection
+            Add to Predictions
         </md-button>
         <md-button ng-click="cancel()">
             Close
