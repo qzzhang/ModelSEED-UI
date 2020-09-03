@@ -1441,6 +1441,7 @@ function($compile, $stateParams) {
             scope.dataSaved = true;
             scope.treeData = null;
             scope.selected = {};
+            scope.promoted = [];
 
             scope.cellDblClick = function(ev, row_col, usr) {
                 scope.selectedCell = row_col;
@@ -1501,7 +1502,6 @@ function($compile, $stateParams) {
                                                      xmlDownloadURL: scope.downloadURL});*/
                         Dialogs.showFuncFamTree(ev, func_name, tree_name, scope.downloadURL, scope.xmldoc,
                             function(selectedGenes) {
-                                alert(func_name + ' calling back from tree display--' + JSON.stringify(selectedGenes));
                                 if(selectedGenes.length > 0) {
                                     addGenesFromFuncTree(selectedGenes, col_id);
                                 }
@@ -1646,6 +1646,14 @@ function($compile, $stateParams) {
                     if (cur_opts != [])
                        addTreeGenes(tree_genes, cur_opts, pre_opts, r, col_id, cur_id, pre_id);
                 }
+                if( scope.dataModified ) {
+                    var infomsg = 'Promoted from curation to prediction:\n'+scope.promoted.join(',');
+                    var p_el = angular.element('tree-window');
+                    Dialogs.showInfo(infomsg, "bottom left", p_el);
+                    console.log(infomsg);
+                } else {
+                    console.log("None of selected gene(s) has been moved from curation to prediction!");
+                }
             }
 
             var addTreeGenes = function(genes, curs, pres, row_id, col_id, cur_id, pre_id) {
@@ -1673,7 +1681,6 @@ function($compile, $stateParams) {
                     if (gn != undefined && gm.indexOf(genome) != -1) {
                         if( (cur_genes && cur_genes.indexOf(gn) != -1) &&
                             ((pre_genes && pre_genes.indexOf(gn) == -1) || pre_genes == []) ) {
-                            alert("This gene is not in prediction yet: " +gn);
                             // create a new option element
                             var new_opt = document.createElement('option');
                             // create text node to add to option element (new_opt)
@@ -1689,6 +1696,7 @@ function($compile, $stateParams) {
                             }
                             // add new_opt to end of the prediction dropdown
                             sel_pre.appendChild(new_opt);
+                            scope.promoted.push(gn);
                             scope.dataModified = true;
                         }
                     }

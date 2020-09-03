@@ -290,6 +290,18 @@
                     resetTree
                 </button>
             </div>
+            <br /> <br />
+            <div ng-if="selectedTreeNodes.length>0" class="row" style="background-color: rgba(255, 255, 128, .5);">
+                Selected gene(s):
+                <md-button class="md-primary md-hue-1" ng-click="refreshAnnotation()">
+                    Promote curations to predictions
+                </md-button>
+                <ul>
+                    <li ng-repeat="node in selectedTreeNodes">
+                        {{node}}
+                    </li>
+                </ul>
+            </div>
         </div>
         <!--The family tree section-->
         <div id="phyd3" class="col-xs-9"></div>
@@ -369,17 +381,6 @@
             Open tree in a separate page
        </a-->
 
-      <md-list>
-        <md-list-item class="md-2-line" ng-repeat="node in selectedTreeNodes">
-          <div class="md-list-item-text">
-            <h3>{{node}}</h3>
-          </div>
-        </md-list-item>
-      </md-list>
-
-        <md-button ng-click="refreshAnnotation()">
-            Add to Predictions
-        </md-button>
         <md-button ng-click="cancel()">
             Close
         </md-button>

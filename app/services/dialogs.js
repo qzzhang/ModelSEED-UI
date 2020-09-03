@@ -278,8 +278,10 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 }
 
                 var addSelectedNodes = function(nd) {
-                    if (!$s.selectedTreeNodes.find(ele => ele.indexOf(nd) >= 0)) {
-                        $s.selectedTreeNodes.push(nd);
+                    if(!$s.selectedTreeNodes.find(ele => ele.indexOf(nd) >= 0)) {
+                        if( nd.indexOf('|_|') !== -1) {
+                            $s.selectedTreeNodes.push(nd);
+                        }
                     }
                 }
 
@@ -312,8 +314,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     })
                 }
 
-                //$s.$watch('$s.opts.pinnedNodes', function(opts) {
-                var updateSelectedTreeNodes = function() {
+                $s.$watch('opts.pinnedNodes', function(newValue, oldValue, $s) {
                     $s.selectedTreeNodes = [];
                     if ($s.opts.pinnedNodes) {
                         // parse for selected tree node names from ids for $s.selectedTreeNodes.toString());
@@ -321,12 +322,10 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                             var t_id = $s.opts.pinnedNodes[ni];
                             searchNameInPhylotreeById(t_id, $s.tree);
                         }
-                        console.log(' tree displayed and selected tree nodes: ' + JSON.stringify($s.selectedTreeNodes));
                     }
-                }//, true)
+                }, true)
 
                 $s.refreshAnnotation = function() {
-                    updateSelectedTreeNodes();
                     cb($s.selectedTreeNodes);
                 }
 
@@ -378,6 +377,19 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
         })
     }
 
+    this.showInfo = function(info, pinTo, pel) {
+        $mdToast.show(
+            $mdToast.simple()
+            .content(info)
+            .position(pinTo)
+            .hideDelay(6000))
+            .parent(pel)  // parent element
+          .then(function() {
+            consol.log('Toast dismissed.');
+          }).catch(function() {
+            console.log('Toast failed or was forced to close early by another toast.');
+          });
+    }
 
     this.showError = function(msg) {
        $mdToast.show({
@@ -827,7 +839,6 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     '</md-toast>',
         hideDelay: duration,
       });
-
     };
 
     this.showComplete = function(title, name, path) {
@@ -849,21 +860,6 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                  '</md-toast>',
          hideDelay: 10000
        });
-    }
-
-    this.showError = function(msg) {
-        $mdToast.show({
-            controller: 'ToastCtrl',
-            parent: angular.element('.sidebar'),
-            //templateUrl:'app/views/dialogs/notify.html',
-            template: '<md-toast>'+
-                            '<span flex style="margin-right: 30px;">'+
-                              '<span class="ms-color-error">Error</span><br>'+
-                              msg+
-                             '</span>'+
-                        '</md-toast>',
-            hideDelay: 10000
-        });
     }
 
     this.download = function(ev, cols, tbody, filename) {
