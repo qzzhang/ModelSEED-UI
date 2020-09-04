@@ -1646,14 +1646,13 @@ function($compile, $stateParams) {
                     if (cur_opts != [])
                        addTreeGenes(tree_genes, cur_opts, pre_opts, r, col_id, cur_id, pre_id);
                 }
+                var infomsg = 'None of selected gene(s) has been moved from curation to prediction!';
+                var p_el = angular.element('tree-window');
                 if( scope.dataModified ) {
-                    var infomsg = 'Promoted from curation to prediction:\n'+scope.promoted.join(',');
-                    var p_el = angular.element('tree-window');
-                    Dialogs.showInfo(infomsg, "bottom left", p_el);
-                    console.log(infomsg);
-                } else {
-                    console.log("None of selected gene(s) has been moved from curation to prediction!");
+                    infomsg = 'Promoted from curation to prediction:\n'+scope.promoted.join(',');
                 }
+                console.log(infomsg);
+                Dialogs.showInfo(infomsg, "bottom left", p_el);
             }
 
             var addTreeGenes = function(genes, curs, pres, row_id, col_id, cur_id, pre_id) {

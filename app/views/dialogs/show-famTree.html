@@ -275,7 +275,6 @@
                 <button class="btn btn-primary" id="linkPNG">PNG</button>
                 <a href="{{downloadURL}}" class="btn btn-primary" id="linkXML" download >XML</a>
             </div>
-
             <br />
             <!--The footer portion of the left panel-->
             <div class="text-center">
@@ -290,17 +289,17 @@
                     resetTree
                 </button>
             </div>
-            <br /> <br />
+            <br />
             <div ng-if="selectedTreeNodes.length>0" class="row" style="background-color: rgba(255, 255, 128, .5);">
                 Selected gene(s):
                 <md-button class="md-primary md-hue-1" ng-click="refreshAnnotation()">
-                    Promote curations to predictions
+                    Propagate curation
                 </md-button>
-                <ul>
-                    <li ng-repeat="node in selectedTreeNodes">
+                <select id="sel_genes" multiple=yes size="8">
+                    <option ng-repeat="node in selectedTreeNodes">
                         {{node}}
-                    </li>
-                </ul>
+                    </option>
+                </select>
             </div>
         </div>
         <!--The family tree section-->
