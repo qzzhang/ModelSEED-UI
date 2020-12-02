@@ -115,6 +115,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     $s.subsysPath = wsPath;
     var subsysFileName = wsPath.split('/').pop();
     $s.captions = [];
+    $s.topRows = [];
 
     // loading the subsystem data (in json format)
     $s.loading = true;
@@ -132,15 +133,16 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     } else {
         WS.get(wsPath)
         .then(function(res) {
-            $s.subsysName = res.data.name;
+            var res_data = res.data.data;
+            $s.subsysName = res_data.subsystem_name;
             $s.subsysMeta = res.meta;
 
             // unmasked data
-            $s.subsysDataClone = Object.assign({}, res.data.data);
+            $s.subsysDataClone = Object.assign({}, res_data.subsystem_data);
             WS.cached.subsystemClone = $s.subsysDataClone;
 
             // html-masked data
-            parseSubsysData(res.data.data);
+            parseSubsysData(res_data.subsystem_data);
             $s.subsysData = buildHtmlContent($s.subsysData);
             WS.cached.captions = $s.captions;
             WS.cached.mySubsysFamTrees = $s.mySubsysFamTrees;
@@ -217,34 +219,52 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     // Parse the given data for the subsystem data structure
     function parseSubsysData(obj_data) {
         // convert the subsystem data into
-        // 1) an array that holds "Genome" as its first element and the function roles after that, the "caption" array;
-        // 2) an object of key-value pairs where 'key' is the function role and 'value' holds the protein families;
+        // 1) an arraty with "Genome" as first (column) element and the rest are function roles--the "captions" array;
+        // 2) an object of key-value pairs where 'key' is the function role and 'value' holds the protein families, the families object;
         // 3) an array of objects parsed from an array of arrays, where each object represents a row of data in the
         // subsystem table:
-        // The first row of data is the respective reactions where each function role (column caption) is associated.
-        // The rows after the first consist of gene annotation details in arrays of geneIds under the categories of
-        // 'curation'/'candidates'/'predictions'
-        //    "caption" of the column serving as the key.
+        // The first row of data is the respective families where each function role (column caption) is associated.
+        // The second row of data is the respective reactions where each function role (column caption) is associated.
+        // The third row of data is the respective cofactors where each function role (column caption) is associated.
+        // The fourth row of data is the respective localizations where each function role (column caption) is associated.
+        // The rows after the first four consist of gene annotation details in arrays of geneIds under the categories of
+        // 'candidates'
+        // 'caption' of the column serving as the key.
         //
-        var caps = ["Genome"], families = {};
-        // fetching the subsystem head captions and family trees
-        for (var i0=1; i0<obj_data[0].length; i0++) {
-            var obj = obj_data[0][i0];
-            if (typeof obj === 'object') {
-                caps.push(obj.role);
-                families[obj.role] = obj.families;
-            }
+        
+        // fetching the subsystem head captions (Genome), Families, Reactions, CoFactors and Localizations
+        var row_keys = ['Genome', 'Families', 'Reactions', 'Cofactors', 'Localizations'];
+        var topRows = [], data = [];
+        for (var i0=0; i0<row_keys.length; i0++) {
+            $s.topRows.push(obj_data[i0][row_keys[i0]]);
+            $s.topRows[i0].unshift(row_keys[i0]);
         }
-        var data = [];
-        for (var i=1; i<obj_data.length; i++) {
-            data[i-1] = {};  // a row of data
-            for (var j=0; j<caps.length; j++) {
-                data[i-1][caps[j]] = obj_data[i][j];  // a column identified by the function role as key
-            }
+        var families = reduceArr($s.topRows[0], $s.topRows[1]);
+        data[0] = families;
+        data[1] = reduceArr($s.topRows[0], $s.topRows[2]); 
+        data[2] = reduceArr($s.topRows[0], $s.topRows[3]); 
+        data[3] = reduceArr($s.topRows[0], $s.topRows[4]); 
+
+        // fetching the annotation details, in rows
+        for (var i=5; i<obj_data.length; i++) {
+            row_keys.push(Object.keys(obj_data[i])[0]);
+            var tmp_data = obj_data[i][row_keys[i]];  // a row of data
+            tmp_data.unshift(row_keys[i]);
+            data[i-1] = reduceArr($s.topRows[0], tmp_data);
         }
-        $s.captions = caps;
+
+        $s.captions = $s.topRows[0];
         $s.subsysData = data;
         $s.mySubsysFamTrees = families;
+    }
+
+    // combine two separate arrays into key value pairs by using array's reduce function
+    function reduceArr(arr1, arr2) {
+        return arr2.reduce(function(result, field, index) {
+            result[arr1[index]] = field;
+            // console.log(result);
+            return result; 
+        }, {});
     }
 
     // With the given data from the NEW subsystem data structure, build the html content for table cells
@@ -252,49 +272,80 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         /*
         input_data: has a structure of an array of objects.  Examples of input_data rows:
         1st row:
-            input_data[0] = {Genome: "Reactions",
+            input_data[0] = {Genome: "Families"
+                "UDP-4-dehydro-6-deoxy-glucose 3,5-epimerase (no EC)": ["OG0001720"],
+                "UDP-4-dehydro-rhamnose reductase (EC 1.1.1.-)": ["OG0000342"],
+                "UDP-glucose 4,6-dehydratase (EC 4.2.1.76)": [],...
+            }
+        2nd row:
+            input_data[1]= {Genome: "Reactions"
                 "UDP-4-dehydro-6-deoxy-glucose 3,5-epimerase (no EC)": "rxn02735",
                 "UDP-4-dehydro-rhamnose reductase (EC 1.1.1.-)": "rxn02735",
                 "UDP-glucose 4,6-dehydratase (EC 4.2.1.76)": "rxn00215"
             }
-        2nd (and other) row:
-            input_data[1]= {
-                Genome: "Acomosus"
-                "UDP-4-dehydro-6-deoxy-glucose 3,5-epimerase (no EC)": {
-                    candidates: (6) [
-                        {"Aco000396.1": {score: "0.855"}},
-                        {"Aco006021.1": {score: "0.845"}}...],
-                    curation: []
-                    prediction: (5) […]
-                },
-                "UDP-4-dehydro-rhamnose reductase (EC 1.1.1.-)": {…}
-                "UDP-glucose 4,6-dehydratase (EC 4.2.1.76)": {…}
+        3rd row:
+            input_data[1]= {Genome: "Cofactors"
+                "UDP-4-dehydro-6-deoxy-glucose 3,5-epimerase (no EC)": ["cpd00034","cpd10515","cpd10516"],
+                "UDP-4-dehydro-rhamnose reductase (EC 1.1.1.-)": ["cpd00034","cpd10515","cpd10516"],
+                "UDP-glucose 4,6-dehydratase (EC 4.2.1.76)": [...],...
+            }
+        4th row:
+            input_data[1]= {Genome: "Localizations"
+                "UDP-4-dehydro-6-deoxy-glucose 3,5-epimerase (no EC)": ["cytosol","mitochondria","cpd10516"],
+                "UDP-4-dehydro-rhamnose reductase (EC 1.1.1.-)": ["cytosol","mitochondria","cpd10516"],,
+                "UDP-glucose 4,6-dehydratase (EC 4.2.1.76)": [...],...
+            }
+        5th (and other) rows:
+            input_data[1]= {Genome: "Athaliana"
+                "UDP-4-dehydro-6-deoxy-glucose 3,5-epimerase (no EC)": [
+                    {candidate: "AT4G14710.5", "prediction": 0,"curation": 1},
+                    {candidate: "AT4G14716.1", "prediction": 0,"curation": 1},...]
+                "UDP-4-dehydro-rhamnose reductase (EC 1.1.1.-)": […]
+                "UDP-glucose 4,6-dehydratase (EC 4.2.1.76)": […]
             }
             ...
         return: the input_data with its original object subdata replaces with the html masked data.
         */
-        var curation_roles = [], prediction_roles = []; candidate_roles = [];
-        var curation_scores = [], prediction_scores = []; candidate_scores = [];
-        input_data[0] = rxnRow(input_data[0]);
+        var curation_roles = [], prediction_roles = [], candidate_roles = [];
+        var curation_scores = [], prediction_scores = [], candidate_scores = [];
+        var candidates = [];
+        input_data[0] = rxnRow(input_data[0]);  // famTreeRow
+        input_data[1] = rxnRow(input_data[1]);  // rxnRow
+        input_data[2] = cofaRow(input_data[2]);  // cofaRow
+        input_data[3] = rxnRow(input_data[3]);  // localRow
 
-        for (var i=1; i<input_data.length; i++) { // i=1 to skip masking the reaction row
+        // skip masking the first 4 (families/reaction/cofactor/localization rows
+        for (var i=4; i<input_data.length; i++) { // 'i' is in essence the row number after the top 4 (0~3) rows
             curation_roles[i] = {};
             prediction_roles[i] = {};
             candidate_roles[i] = {};
             curation_scores[i] = {};
             prediction_scores[i] = {};
             candidate_scores[i] = {};
+
+            candidates[i] = [];
             var indata = input_data[i];
             var key_arr = Object.keys(indata);  // captions for the row of genome & functional roles
-            for (var k = 1; k<key_arr.length; k++) { // k=1 to skip masking the genome column
-                key = key_arr[k];  // one column at a time
+
+            for (var k = 1; k<key_arr.length; k++) { // 'k' is in essence the column number, skip the first (0) column
+                var key = key_arr[k];  // one column at a time
+                var val = indata[key]; // for for one annotation table cell
+                candidates[i][k] = [];
+                for (var k1 = 0; k1<val.length; k1++) { // k1 is the subdata index within the table cell
+                    candidates[i][k].push({'feature': val[k1]['feature'],
+                                             'curation': val[k1]['curation'],
+                                             'prediction': val[k1]['prediction']
+                                            });
+                }
+                // console.log(candidates[i][k]);
+
+/*
                 curation_roles[i][key] = [];
                 prediction_roles[i][key] = [];
                 candidate_roles[i][key] = [];
                 curation_scores[i][key] = [];
                 prediction_scores[i][key] = [];
                 candidate_scores[i][key] = [];
-                var val = indata[key];
                 if (typeof val === 'object' && key != 'Genome') {
                     Object.keys(val).forEach(function(sub_key) {
                         switch(sub_key) {
@@ -330,17 +381,18 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                               break;
                         }
                     });
-                    indata[key] = buildCellHtml(curation_roles[i][key], candidate_roles[i][key], prediction_roles[i][key],
+                    indata[key] = buildCellHtml0(curation_roles[i][key], candidate_roles[i][key], prediction_roles[i][key],
                                                 curation_scores[i][key], candidate_scores[i][key], prediction_scores[i][key], i, k);
-                }
+                }*/
+                indata[key] = buildCellHtml(candidates, i, k);
             }
             input_data[i] = indata;
         }
         return input_data;
     }
 
-    function rxnRow(indata0) {
-        // re-write the reaction row by adding the anchor links and allowing blank rxns
+    function famTreeRow(indata0) {
+        // re-write the family tree row by adding the anchor links and allowing blank family trees
         var key_arr = Object.keys(indata0);
         for (var k = 1; k<key_arr.length; k++) {
             var key = key_arr[k],
@@ -353,12 +405,101 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                 indata0[key] = lnk_arr.join(',');
             }
             else
-            indata0[key] = "<span></span>";
+                indata0[key] = "<span></span>";
         }
         return indata0;
     }
 
-    function buildCellHtml(curk_arr, cank_arr, prek_arr, curv_arr, canv_arr, prev_arr, row_id, col_id) {
+    function rxnRow(indata1) {
+        // re-write the reaction row by adding the anchor links and allowing blank rxns
+        var key_arr = Object.keys(indata1);
+        for (var k = 1; k<key_arr.length; k++) {
+            var key = key_arr[k],
+                val = indata1[key];
+            var lnk_arr = [];
+            if (val !== '') {
+                if (Array.isArray(val)) {
+                    val = val.join(",");
+                }
+                val.split(',').forEach(function(item, index) {
+                    lnk_arr.push('<a ui-sref="app.rxn({id: \''+item+'\'})" target="_blank">'+item+'</a>');
+                })
+                indata1[key] = lnk_arr.join(',');
+            }
+            else
+                indata1[key] = "<span></span>";
+        }
+        return indata1;
+    }
+
+    function cofaRow(indata) {
+        // re-write the cofactors row by adding the anchor links and allowing blank cofactor
+        var key_arr = Object.keys(indata);
+        for (var k = 1; k<key_arr.length; k++) {
+            var key = key_arr[k],
+                val = indata[key];
+            var lnk_arr = [];
+            if (val !== '') {
+                if (Array.isArray(val)) {
+                    val = val.join(",");
+                }
+                val.split(',').forEach(function(item, index) {
+                    lnk_arr.push('<a ui-sref="app.cpd({id: \''+item+'\'})" target="_blank">'+item+'</a>');
+                })
+                indata[key] = lnk_arr.join(',');
+            }
+            else
+                indata[key] = "<span></span>";
+        }
+        return indata;
+    }
+
+    function buildCellHtml(can_arr, row_id, col_id) {
+        /*
+        can_arr: an array of candidate gene_ids (string) and curation & prediction values (0 or 1)
+        row_id: the cell's row id (int)
+        col_id: the cell's columm id (int)
+        return: the html string that mask the data for a table cell at (row_id, col_id).
+        */
+        var can_str = '', colr = 'black',
+            row_col = 'row'+row_id.toString(10)+'_col'+col_id.toString(10),
+            gene_id_str = ''; //'<section layout="row" layout-sm="column" layout-align="center center">';
+
+        var cell_data = can_arr[row_id][col_id];
+        //can_str = '<div style="color: green;">Candidates:<br>';
+        can_str = '<div>Candidates:<br>';
+        can_str += '<ul id="can_'+row_col+'" style="list-style-type:none;">';
+        for (var i = 0; i < cell_data.length; i++) {
+            can_str += '<li><p';
+            if (cell_data[i]["curation"]) {
+                can_str += ' style="color:green;"'; 
+            }
+            else if (cell_data[i]["prediction"]) {
+                can_str += ' style="color: blue;"'; 
+            }
+            can_str += '>' + cell_data[i]["feature"] + '</p></li>';
+
+            can_str += '<select style="width:120px;">';
+            can_str += '<option value="">Set annotation</option>';
+            can_str += '<option value="curation"';
+            if (cell_data[i]["curation"]) {
+                can_str += ' selected';
+            }
+            can_str += '>curation</option>';
+            can_str += '<option value="prediction"';
+            if (cell_data[i]["prediction"]) {
+                can_str += ' selected';
+            }
+            can_str += '>prediction</option></select>';
+        }
+        can_str += '</ul></div>';
+        gene_id_str += can_str;
+
+        return gene_id_str;
+    }
+
+
+    function buildCellHtml0(curk_arr, cank_arr, prek_arr, curv_arr, canv_arr, prev_arr, row_id, col_id) {
         /*
         curk_arr: an array of curation gene_ids (string)
         cank_arr: an array of candidate gene_ids (string)

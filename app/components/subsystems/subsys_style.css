@@ -21,10 +21,7 @@ td, th {
 }
 th {color: white; background: rgb(9, 173, 202);}
 thead th {
-    position: -webkit-sticky; /* for Safari */
-    position: sticky;
-    top: 54px;   /* Where it should stick to */
-    z-index: 3;  /* Ensure it stays on top of other layer divs */
+    border: 1px solid black;
 }
 thead th:first-child {
     position: -webkit-sticky; /* for Safari */
@@ -32,6 +29,7 @@ thead th:first-child {
     left: -15px;
     z-index: 4;
 }
+
 tbody td:hover {background-color:#ddd;}
 tbody td:first-child {
     position: -webkit-sticky; /* for Safari */
@@ -42,7 +40,7 @@ tbody td:first-child {
     background-color: rgb(9, 173, 202);
 }
 tbody th:first-child {
-    z-index: 2;
+    z-index: 1;
 }
 
 .stickyrow {
@@ -51,10 +49,20 @@ tbody th:first-child {
     top: 120px;
     /*bottom: 0px;*/
     left: -15px;
-    z-index: 1;  /* Ensure it stays on top of other layer divs */
+    z-index: 2;  /* Ensure it stays on top of other layer divs */
     color: black;
     background-color: rgb(220, 228, 147);
 }
+thead.sticky {
+    position: -webkit-sticky;  /* for Safari */
+    position: sticky;
+    top: 50px;  /* Where it should stick to */
+    padding: 50px;
+    z-index: 2;  /* Ensure it stays on top of other layer divs */
+    font-size: 15px;
+    background-color: rgb(220, 228, 147);
+  }
+
 .table-search {
     position: -webkit-sticky;
     position: sticky;
