@@ -1415,6 +1415,8 @@ function($compile, $stateParams) {
             opts: '=tableOpts',
             allFamtrees: '=tableAllFamtrees',
             myFamtrees: '=tableMyFamtrees',
+            compartments: '=tableCompartments',
+            geneannos: '=tableGeneannos',
             loading: '=tableLoading',
             isDemo: '=tableIsDemo',
             cellClick: '=tableCellClick',
@@ -1453,7 +1455,7 @@ function($compile, $stateParams) {
                 scope.sel_cand = document.getElementById(can_id);
 
                 // Note: Because in scope.dataClone, row 0 data is for Genom & function roles and row 1 is for reactions,
-                //       with row 0 as the table header, row 1 in the table should bare the data of row 2 in scope.dataClone
+                //       with row 0 as the table header, row 1 in the table should bear the data of row 2 in scope.dataClone
                 Dialogs.showGene(ev, scope.dataClone[row_id+1][col_id]["candidates"][scope.sel_cand.selectedIndex],
                 function(gene) {
                     console.log('modified gene object: ', JSON.stringify(gene));
@@ -1464,6 +1466,10 @@ function($compile, $stateParams) {
 
                 ev.stopPropagation();
                 ev.preventDefault();
+            }
+
+            scope.comptSelected = function(ev, comptName, col_id, usr) {
+                alert("One compartment of value:" + comptName + " selected!");
             }
 
             scope.familyTreeSelected = function(ev, treeName, func_name, col_id, usr) {

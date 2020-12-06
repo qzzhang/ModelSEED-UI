@@ -116,6 +116,8 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     var subsysFileName = wsPath.split('/').pop();
     $s.captions = [];
     $s.topRows = [];
+    $s.compartments = getCompartments();
+    $s.geneannos = ['curation', 'prediction'];
 
     // loading the subsystem data (in json format)
     $s.loading = true;
@@ -216,6 +218,20 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
             })
     }
 
+    function getCompartments() {
+        return [
+            'Carboxysome',
+            'Plasma Membrane',
+            'Cytosol',
+            'Stroma',
+            'Extracellular',
+            'ER_Membrane',
+            'Golgi',
+            'Mitochondria_OMem',
+            'Mitochondria_iMMem',
+            'Mitochondria_iMem'
+        ].sort();
+    }
     // Parse the given data for the subsystem data structure
     function parseSubsysData(obj_data) {
         // convert the subsystem data into
@@ -309,20 +325,13 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         var curation_roles = [], prediction_roles = [], candidate_roles = [];
         var curation_scores = [], prediction_scores = [], candidate_scores = [];
         var candidates = [];
-        input_data[0] = rxnRow(input_data[0]);  // famTreeRow
-        input_data[1] = rxnRow(input_data[1]);  // rxnRow
-        input_data[2] = cofaRow(input_data[2]);  // cofaRow
-        input_data[3] = rxnRow(input_data[3]);  // localRow
+        input_data[0] = famTreeRow(input_data[0]);  // famTreeRow
+        input_data[1] = rxn_cofaRow(input_data[1], 'rxn');  // rxnRow
+        input_data[2] = rxn_cofaRow(input_data[2], 'cpd');  // cofaRow
+        input_data[3] = compartmentRow(input_data[3]);  // localRow
 
         // skip masking the first 4 (families/reaction/cofactor/localization rows
         for (var i=4; i<input_data.length; i++) { // 'i' is in essence the row number after the top 4 (0~3) rows
-            curation_roles[i] = {};
-            prediction_roles[i] = {};
-            candidate_roles[i] = {};
-            curation_scores[i] = {};
-            prediction_scores[i] = {};
-            candidate_scores[i] = {};
-
             candidates[i] = [];
             var indata = input_data[i];
             var key_arr = Object.keys(indata);  // captions for the row of genome & functional roles
@@ -333,57 +342,10 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                 candidates[i][k] = [];
                 for (var k1 = 0; k1<val.length; k1++) { // k1 is the subdata index within the table cell
                     candidates[i][k].push({'feature': val[k1]['feature'],
-                                             'curation': val[k1]['curation'],
-                                             'prediction': val[k1]['prediction']
-                                            });
+                                           'curation': val[k1]['curation'],
+                                           'prediction': val[k1]['prediction']
+                                          });
                 }
-                // console.log(candidates[i][k]);
-
-/*
-                curation_roles[i][key] = [];
-                prediction_roles[i][key] = [];
-                candidate_roles[i][key] = [];
-                curation_scores[i][key] = [];
-                prediction_scores[i][key] = [];
-                candidate_scores[i][key] = [];
-                if (typeof val === 'object' && key != 'Genome') {
-                    Object.keys(val).forEach(function(sub_key) {
-                        switch(sub_key) {
-                            case 'curation':
-                              // curation genes
-                              Object.keys(val[sub_key]).forEach(function(ssubK) {
-                                var curk_arr = Object.keys(val[sub_key][ssubK]);
-                                var curv_arr = Object.values(val[sub_key][ssubK]);
-                                curation_roles[i][key] = curation_roles[i][key].concat(curk_arr);
-                                curation_scores[i][key] = curation_roles[i][key].concat(curv_arr);
-                              });
-                              break;
-                            case 'prediction':
-                              // prediction genes
-                              Object.keys(val[sub_key]).forEach(function(ssubK) {
-                                var prek_arr = Object.keys(val[sub_key][ssubK]);
-                                var prev_arr = Object.values(val[sub_key][ssubK]);
-                                prediction_roles[i][key] = prediction_roles[i][key].concat(prek_arr);
-                                prediction_scores[i][key] = prediction_scores[i][key].concat(prev_arr);
-                              });
-                              break;
-                            case 'candidates':
-                              // candidate genes
-                              Object.keys(val[sub_key]).forEach(function(ssubK) {
-                                var cank_arr = Object.keys(val[sub_key][ssubK]);
-                                var canv_arr = Object.values(val[sub_key][ssubK]);
-                                candidate_roles[i][key] = candidate_roles[i][key].concat(cank_arr);
-                                candidate_scores[i][key] = candidate_scores[i][key].concat(canv_arr);
-                              });
-                              break;
-                            default:
-                              // do nothing
-                              break;
-                        }
-                    });
-                    indata[key] = buildCellHtml0(curation_roles[i][key], candidate_roles[i][key], prediction_roles[i][key],
-                                                curation_scores[i][key], candidate_scores[i][key], prediction_scores[i][key], i, k);
-                }*/
                 indata[key] = buildCellHtml(candidates, i, k);
             }
             input_data[i] = indata;
@@ -391,65 +353,72 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         return input_data;
     }
 
-    function famTreeRow(indata0) {
-        // re-write the family tree row by adding the anchor links and allowing blank family trees
-        var key_arr = Object.keys(indata0);
-        for (var k = 1; k<key_arr.length; k++) {
-            var key = key_arr[k],
-                val = indata0[key];
-            var lnk_arr = [];
-            if (val !== '') {
-                val.split(',').forEach(function(item, index) {
-                    lnk_arr.push('<a ui-sref="app.rxn({id: \''+item+'\'})" target="_blank">'+item+'</a>');
-                })
-                indata0[key] = lnk_arr.join(',');
-            }
-            else
-                indata0[key] = "<span></span>";
-        }
-        return indata0;
-    }
-
-    function rxnRow(indata1) {
-        // re-write the reaction row by adding the anchor links and allowing blank rxns
-        var key_arr = Object.keys(indata1);
-        for (var k = 1; k<key_arr.length; k++) {
-            var key = key_arr[k],
-                val = indata1[key];
-            var lnk_arr = [];
-            if (val !== '') {
-                if (Array.isArray(val)) {
-                    val = val.join(",");
-                }
-                val.split(',').forEach(function(item, index) {
-                    lnk_arr.push('<a ui-sref="app.rxn({id: \''+item+'\'})" target="_blank">'+item+'</a>');
-                })
-                indata1[key] = lnk_arr.join(',');
-            }
-            else
-                indata1[key] = "<span></span>";
-        }
-        return indata1;
-    }
-
-    function cofaRow(indata) {
-        // re-write the cofactors row by adding the anchor links and allowing blank cofactor
+    function famTreeRow(indata) {
+        // re-write the family tree row by adding the protein families to a radio buttun list
         var key_arr = Object.keys(indata);
         for (var k = 1; k<key_arr.length; k++) {
             var key = key_arr[k],
                 val = indata[key];
-            var lnk_arr = [];
-            if (val !== '') {
-                if (Array.isArray(val)) {
-                    val = val.join(",");
+            if (val && val.length > 0) {
+                if (!Array.isArray(val)) {
+                    val = val.split(',');
                 }
-                val.split(',').forEach(function(item, index) {
-                    lnk_arr.push('<a ui-sref="app.cpd({id: \''+item+'\'})" target="_blank">'+item+'</a>');
+                var rd_str = '<p>Select a protein family:</p>';
+                val.forEach(function(item, index) {
+                    rd_str += '<div><input type="radio" id="';
+                    rd_str += item + '" name="' + item + '" value="' + item + '"';
+                    if (rd_str.indexOf('checked') == -1) {
+                        rd_str += ' checked';
+                    }
+                    rd_str += '><label for="' + item + '">' + item + '</label></div>';
                 })
-                indata[key] = lnk_arr.join(',');
+                indata[key] = rd_str;
             }
             else
                 indata[key] = "<span></span>";
+        }
+        return indata;
+    }
+
+    function rxn_cofaRow(indata, catg) {
+        // re-write the reaction row by adding the anchor links and allowing blank rxns
+        var key_arr = Object.keys(indata);
+        for (var k = 1; k<key_arr.length; k++) {
+            var key = key_arr[k],
+                val = indata[key];
+            var lnk_str ='<div style="border:1px solid black; width: 120px;">'; 
+            if (val && val.length > 0) {
+                if (!Array.isArray(val)) {
+                    val = val.split(',');
+                }
+                val.forEach(function(item, index) {
+                    lnk_str += '<a ui-sref="app.';
+                    lnk_str += catg + '({id: \''+item+'\'})" target="_blank">'+item+'</a><br>';
+                })
+            }
+            lnk_str += '</div><button>Add ' + catg + '</button>';
+            indata[key] = lnk_str;
+        }
+        return indata;
+    }
+
+    function compartmentRow(indata) {
+        // re-write the reaction row by adding the anchor links and allowing blank rxns
+        var key_arr = Object.keys(indata);
+        for (var k = 1; k<key_arr.length; k++) {
+            var key = key_arr[k],
+                val = indata[key];
+            var lnk_str = '<div style="border:1px solid black; width: 120px;">';
+            if (val && val.length > 0) {
+                if (!Array.isArray(val)) {
+                    val = val.split(',');
+                }
+                val.forEach(function(item, index) {
+                    lnk_str += item +'<br>';
+                })
+            }
+            lnk_str += '</div>';
+            indata[key] = lnk_str;
         }
         return indata;
     }
@@ -462,40 +431,23 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         return: the html string that mask the data for a table cell at (row_id, col_id).
         */
         var can_str = '', colr = 'black',
-            row_col = 'row'+row_id.toString(10)+'_col'+col_id.toString(10),
-            gene_id_str = ''; //'<section layout="row" layout-sm="column" layout-align="center center">';
+            row_col = 'row'+row_id.toString(10)+'_col'+col_id.toString(10);
 
         var cell_data = can_arr[row_id][col_id];
-        //can_str = '<div style="color: green;">Candidates:<br>';
-        can_str = '<div>Candidates:<br>';
-        can_str += '<ul id="can_'+row_col+'" style="list-style-type:none;">';
+        can_str = 'Candidates:<br>';
+        can_str += '<div style="border:1px solid black;">';
         for (var i = 0; i < cell_data.length; i++) {
-            can_str += '<li><p';
+            can_str += '<span';
             if (cell_data[i]["curation"]) {
                 can_str += ' style="color:green;"'; 
             }
             else if (cell_data[i]["prediction"]) {
                 can_str += ' style="color: blue;"'; 
             }
-            can_str += '>' + cell_data[i]["feature"] + '</p></li>';
-
-            can_str += '<select style="width:120px;">';
-            can_str += '<option value="">Set annotation</option>';
-            can_str += '<option value="curation"';
-            if (cell_data[i]["curation"]) {
-                can_str += ' selected';
-            }
-            can_str += '>curation</option>';
-            can_str += '<option value="prediction"';
-            if (cell_data[i]["prediction"]) {
-                can_str += ' selected';
-            }
-            can_str += '>prediction</option></select>';
+            can_str += '>' + cell_data[i]["feature"] + '</span>'+'<br>';
         }
-        can_str += '</ul></div>';
-        gene_id_str += can_str;
-
-        return gene_id_str;
+        can_str += '</div>';
+        return can_str;
     }
 
 
@@ -879,23 +831,23 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         return input_data;
     }
 
-    function rxnRow(indata0) {
+    function rxnRow(indata) {
         // re-write the reaction row by adding the anchor links and allowing blank rxns
-        var key_arr = Object.keys(indata0);
+        var key_arr = Object.keys(indata);
         for (var k = 1; k<key_arr.length; k++) {
             var key = key_arr[k],
-                val = indata0[key];
+                val = indata[key];
             var lnk_arr = [];
             if (val !== '') {
                 val.split(',').forEach(function(item, index) {
                     lnk_arr.push('<a ui-sref="app.rxn({id: \''+item+'\'})" target="_blank">'+item+'</a>');
                 })
-                indata0[key] = lnk_arr.join(',');
+                indata[key] = lnk_arr.join(',');
             }
             else
-                indata0[key] = "<span></span>";
+                indata[key] = "<span></span>";
         }
-        return indata0;
+        return indata;
     }
 
     function buildCellHtml(curk_arr, cank_arr, prek_arr, curv_arr, canv_arr, prev_arr, row_id, col_id) {

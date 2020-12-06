@@ -9,10 +9,10 @@ div.container {
     left: -80px;
 }
 table {
-    /*table-layout: auto;*/
     width: 100%;
     position: relative;
     float: top;
+    border-collapse: collapse;
 }
 td, th {
     border: 1px solid #000;
@@ -28,6 +28,9 @@ thead th:first-child {
     position: sticky;
     left: -15px;
     z-index: 4;
+}
+thead tr {
+    border-bottom: 1px solid black;
 }
 
 tbody td:hover {background-color:#ddd;}
