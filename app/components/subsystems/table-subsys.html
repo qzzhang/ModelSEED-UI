@@ -29,7 +29,7 @@
             <md-input-container ng-if="noPagination" layout-align="center start">
                 <label>
                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    Total {{data.length - 4}} {{resultText}}
+                    Total {{data.length}} {{resultText}}
                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 </label>
             </md-input-container>
@@ -46,24 +46,25 @@
     </div>
 
     <table class="table table-striped table-bordered" ng-hide="filtered && filtered.length==0">
-        <thead class='sticky'>
+        <thead>
             <tr>
                 <th sortable col-id="{{header[0].key}}"
+                    style="border: 1px solid black;"
                     ng-click="sortBy($event, header[0].key)">
                         {{::header[0].label}}
                 </th>
                 <th ng-repeat="h in header.slice(1) track by $index" col-id="{{h.key}}"
-                    style="margin-bottom: 50px;"
+                    style="border: 1px solid black;"
                     ng-class="{active: selected.index == $index}"
                     context-menu="openMenu($event, $index, h)"
                     context-menu-close="closeMenu($event, h)"
                     data-target="dropdown-menu-target"
-                    title="{{::h.label}}">
-                        {{::h.label.substring(0, 25)}}...
+                    title="Right click to view family tree(s)">
+                        <div class="tabheader">{{::h.label}}</div>
                 </th>
             </tr>
-            <tr ng-repeat="row in data.slice(0,4)">
-                <th ng-repeat="h in header" style="color: black; background-color: rgb(220, 228, 147);">
+            <tr ng-repeat="row in data.slice(0,1)">
+                <th class="stickyrow" ng-repeat="h in header" style="border: 1px solid black;">
                     <span ng-if="h.hasOwnProperty('formatter')" bind-html-compile="h.formatter(row[h.key])"></span>
                     <a ng-if="h.hasOwnProperty('link')" ui-sref="{{h.link.state}}( h.link.getOpts(row) )"
                         ng-click="$event.stopPropagation();">
@@ -78,11 +79,7 @@
             </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="row in (filtered = ( data | filter: opts.query
-                                                | filter: { Genome: '!' + 'Families' }
-                                                | filter: { Genome: '!' + 'Reactions' }
-                                                | filter: { Genome: '!' + 'Cofactors' }
-                                                | filter: { Genome: '!' + 'Localizations' }
+        <tr ng-repeat="row in (filtered = ( data | filter: opts.query | filter: { Genome: '!' + 'Reactions' }
                         | orderBy : opts.sort.field : opts.sort.desc)
                         | limitTo : opts.limit : opts.offset)">
             <td ng-repeat="h in header" style="border: 1px solid black;">
