@@ -346,7 +346,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                                            'prediction': val[k1]['prediction']
                                           });
                 }
-                indata[key] = buildCellHtml(candidates, i, k);
+                indata[key] = candidates[i][k];
             }
             input_data[i] = indata;
         }
@@ -423,35 +423,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         return indata;
     }
 
-    function buildCellHtml(can_arr, row_id, col_id) {
-        /*
-        can_arr: an array of candidate gene_ids (string) and curation & prediction values (0 or 1)
-        row_id: the cell's row id (int)
-        col_id: the cell's columm id (int)
-        return: the html string that mask the data for a table cell at (row_id, col_id).
-        */
-        var can_str = '', colr = 'black',
-            row_col = 'row'+row_id.toString(10)+'_col'+col_id.toString(10);
-
-        var cell_data = can_arr[row_id][col_id];
-        can_str = 'Candidates:<br>';
-        can_str += '<div style="border:1px solid black;">';
-        for (var i = 0; i < cell_data.length; i++) {
-            can_str += '<span';
-            if (cell_data[i]["curation"]) {
-                can_str += ' style="color:green;"'; 
-            }
-            else if (cell_data[i]["prediction"]) {
-                can_str += ' style="color: blue;"'; 
-            }
-            can_str += '>' + cell_data[i]["feature"] + '</span>'+'<br>';
-        }
-        can_str += '</div>';
-        return can_str;
-    }
-
-
-    function buildCellHtml0(curk_arr, cank_arr, prek_arr, curv_arr, canv_arr, prev_arr, row_id, col_id) {
+    function buildCellHtml(curk_arr, cank_arr, prek_arr, curv_arr, canv_arr, prev_arr, row_id, col_id) {
         /*
         curk_arr: an array of curation gene_ids (string)
         cank_arr: an array of candidate gene_ids (string)

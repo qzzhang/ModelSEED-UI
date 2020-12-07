@@ -1472,13 +1472,22 @@ function($compile, $stateParams) {
                 alert("Compartment " + comptName + " is selected!");
             }
 
-            scope.annoSelected = function(ev, annoName, col_id) {
-                alert("Annotation " + annoName + " is selected!");
-                // Change the gene_id text color depending on the selected valus
+            scope.annoSelected = function(ev, annoName, item) {
+                alert("Modify the gene annotation to be \"" + annoName + "\"?");
+                // Change the gene_id text color depending on the selected values
+                var tab_cell, genome_name = item.genome, idx = item.g_row;
+                for (var i = 4; i < scope.data.length; i++) {
+                    if (scope.data[i]['Genome'] === genome_name) {
+                        tab_cell = scope.data[i][item.col_key];
+                        break;
+                    }
+                }
                 if (annoName == 'curation') {
-
+                    tab_cell[idx].curation = 1;
+                    tab_cell[idx].prediction = 0;
                 } else if (annoName == 'prediction') {
-
+                    tab_cell[idx].curation = 0;
+                    tab_cell[idx].prediction = 1;
                 }
             }
 
@@ -1841,18 +1850,18 @@ function($compile, $stateParams) {
             }
 
             // context menu open
-            scope.openMenu = function(e, i, h) {
-                scope.selectColumn(e, i, h);
+            scope.openMenu = function(e, i, g, r, h) {
+                scope.selectColumn(e, i, g, r, h);
             }
 
             // context menu close
-            scope.closeMenu = function(e, i) {
+            scope.closeMenu = function(e, i, g, r, h) {
                 scope.selected = undefined;
             }
 
-            scope.selectColumn = function(e, i, h) {
-                scope.selected = {func_name: h.key, col_id: h.column_id};
-                scope.famTrees = scope.myFamtrees[scope.selected.func_name];
+            scope.selectColumn = function(e, i, g, r, h) {
+                scope.selected = {gene_id: g.feature, genome: r.Genome, g_row: i, col_key: h.key};
+                // scope.famTrees = scope.myFamtrees[scope.selected.func_name];
                 e.stopPropagation();
                 e.preventDefault();
             }
