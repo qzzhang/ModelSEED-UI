@@ -1469,7 +1469,17 @@ function($compile, $stateParams) {
             }
 
             scope.comptSelected = function(ev, comptName, col_id, usr) {
-                alert("One compartment of value:" + comptName + " selected!");
+                alert("Compartment " + comptName + " is selected!");
+            }
+
+            scope.annoSelected = function(ev, annoName, col_id) {
+                alert("Annotation " + annoName + " is selected!");
+                // Change the gene_id text color depending on the selected valus
+                if (annoName == 'curation') {
+
+                } else if (annoName == 'prediction') {
+
+                }
             }
 
             scope.familyTreeSelected = function(ev, treeName, func_name, col_id, usr) {

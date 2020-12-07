@@ -128,11 +128,11 @@
     <!-- right click dropdown context menu -->
     <div class="dropdown position-fixed" id="dropdown-menu-target-anno" style="z-index: 5">
         <ul class="dropdown-menu" role="menu">
-            <li ng-repeat="ga in geneannos">
+            <li ng-repeat="ann in geneannos">
                 <a role="menuitem" tabindex="1"
                    ng-click="annoSelected($event, ann, selected.anno_name, selected.col_id)">
-                   <span ng-if="ga == 'curation'" style="color:green">{{ga}}</span>
-                   <span ng-if="ga == 'prediction'" style="color:blue">{{ga}}</span>
+                   <span ng-if="ann == 'curation'" style="color:green">{{ga}}</span>
+                   <span ng-if="ann == 'prediction'" style="color:blue">{{ga}}</span>
                 </a>
             </li>
         </ul>
