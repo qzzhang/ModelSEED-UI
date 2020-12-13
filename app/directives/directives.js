@@ -2018,10 +2018,6 @@ function($compile, $stateParams) {
             })
 
             function updateCloneData(row_id, col_key, cell_data, g_row) {
-                /*
-                 Save the data in dropdown list with id of sel_id into the corresponding
-                 json document sections of the dataClone.
-                 */
                 var func_arr = scope.dataClone[0]['Genome'], col_id;
                 for (var i=0; i<func_arr.length; i++) {
                     if (func_arr[i] === col_key) {
@@ -2035,19 +2031,6 @@ function($compile, $stateParams) {
                 var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
                 scope.dataClone[row_id+1][gnm_key][col_id][g_row].curation = cell_data[g_row].curation;
                 scope.dataClone[row_id+1][gnm_key][col_id][g_row].prediction = cell_data[g_row].prediction;
-                /*
-                var cell_info = getRowColIds(sel_id);
-                var gene_group_name = cell_info['gene_group'],
-                    row_id = cell_info['row_id'],
-                    col_id = cell_info['col_id'];
-
-                var sel_opts = document.getElementById(sel_id).options;
-                var sel_data = [];  // array of objects
-                for (var i=0; i<sel_opts.length; i++) {
-                    var sel = {};
-                    sel[sel_opts[i].text] = {"score": sel_opts[i].value};
-                    sel_data.push(sel);
-                }*/
             }
 
             function getRowColIds(sel_id) {
