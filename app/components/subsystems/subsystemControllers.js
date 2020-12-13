@@ -381,7 +381,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     }
 
     function rxn_cofaRow(indata, catg) {
-        // re-write the reaction row by adding the anchor links and allowing blank rxns
+        // re-write the reaction/cofactors rows by adding the anchor links and allowing blank rxns
         var key_arr = Object.keys(indata);
         for (var k = 1; k<key_arr.length; k++) {
             var key = key_arr[k],
@@ -403,7 +403,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     }
 
     function compartmentRow(indata) {
-        // re-write the reaction row by adding the anchor links and allowing blank rxns
+        // re-write the compartment row
         var key_arr = Object.keys(indata);
         for (var k = 1; k<key_arr.length; k++) {
             var key = key_arr[k],

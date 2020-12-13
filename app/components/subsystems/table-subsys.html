@@ -84,6 +84,11 @@
                     data-target="dropdown-menu-target-cmpt"
                     title="Right click to select and add compartment(s)">
                     <span ng-if="h.hasOwnProperty('formatter')" bind-html-compile="h.formatter(row[h.key])"></span>
+
+                    <span ng-if="!h.hasOwnProperty('formatter') && !h.hasOwnProperty('link')">
+                        <a ng-if="h.hasOwnProperty('click')" ng-click="h.click(row)">{{::row[h.key]}}</a>
+                        <span ng-if="!h.hasOwnProperty('click')">{{::row[h.key]}}</span>
+                    </span>
                 </th>
             </tr>
         </thead>
