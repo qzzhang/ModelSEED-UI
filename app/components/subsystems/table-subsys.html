@@ -79,9 +79,9 @@
             <tr ng-repeat="row in data.slice(3,4)">
                 <th ng-repeat="h in header" style="color: black; background-color: rgb(220, 228, 147);"
                     ng-class="{active: selected.index == $index}"
-                    context-menu="openMenu($event, $index, h, row)"
-                    context-menu-close="closeMenu($event, h)"
-                    data-target="dropdown-menu-target-cmpt"
+                    context-menu="openComptMenu($event, $index, row, h)"
+                    context-menu-close="closeComptMenu($event, h)"
+                    data-target="dropdown-menu-target-compt"
                     title="Right click to select and add compartment(s)">
                     <span ng-if="h.hasOwnProperty('formatter')" bind-html-compile="h.formatter(row[h.key])"></span>
 
@@ -104,8 +104,8 @@
             <td ng-repeat="h in header.slice(1)" style="border: 1px solid black;">
                 <span ng-repeat="g in row[h.key]"
                     ng-class="{active: selected.index == $index}"
-                    context-menu="openMenu($event, $index, g, row, h)"
-                    context-menu-close="closeMenu($event, g, row, h)"
+                    context-menu="openAnnoMenu($event, $index, g, row, h)"
+                    context-menu-close="closeAnnoMenu($event, g, row, h)"
                     data-target="dropdown-menu-target-anno"
                     title="Right click to specify annotation">
                     <span ng-if="g['curation']" style="color: green;">
@@ -121,11 +121,11 @@
     </table>
 
     <!-- right click dropdown context menu -->
-    <div class="dropdown position-fixed" id="dropdown-menu-target-cmpt" style="z-index: 5">
+    <div class="dropdown position-fixed" id="dropdown-menu-target-compt" style="z-index: 5">
         <ul class="dropdown-menu" role="menu">
             <li ng-repeat="c in compartments">
                 <a role="menuitem" tabindex="1"
-                   ng-click="comptSelected($event, c, selected.func_name, selected.col_id)">
+                   ng-click="comptSelected($event, c, selectedCompt)">
                    {{c}}
                 </a>
             </li>
@@ -137,7 +137,7 @@
         <ul class="dropdown-menu" role="menu">
             <li ng-repeat="ga in geneannos">
                 <a role="menuitem" tabindex="1"
-                   ng-click="annoSelected($event, ga, selected)">
+                   ng-click="annoSelected($event, ga, selectedAnno)">
                    <span ng-if="ga == 'curation'" style="color:green">{{ga}}</span>
                    <span ng-if="ga == 'prediction'" style="color:blue">{{ga}}</span>
                 </a>

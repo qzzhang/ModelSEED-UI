@@ -1443,6 +1443,7 @@ function($compile, $stateParams) {
             scope.dataSaved = true;
             scope.treeData = null;
             scope.selected = {};
+            scope.selectedAnno = {};
             scope.promoted = [];
 
             scope.cellDblClick = function(ev, row_col, usr) {
@@ -1467,8 +1468,20 @@ function($compile, $stateParams) {
                 ev.preventDefault();
             }
 
-            scope.comptSelected = function(ev, comptName, col_id, usr) {
+            scope.comptSelected = function(ev, comptName, sel_item) {
+                // Add the selected compartment value to the end of the existing localization array
                 alert("Compartment " + comptName + " is selected!");
+                var local_str = scope.data[3][sel_item.col_key], lower_cmpt = comptName.toLowerCase();
+                if (local_str.indexOf(lower_cmpt) >= 0) {
+                    return;
+                }
+                var genome_name = sel_item.genome;
+                var local_arr = local_str.split('<br>');
+                var pos = local_arr.length;
+                local_arr.splice(pos - 1, 0, lower_cmpt);
+                scope.data[3][sel_item.col_key] = local_arr.join('<br>')
+                rememberToSave();
+                updateComptChanges(sel_item.col_key, lower_cmpt);
             }
 
             scope.annoSelected = function(ev, annoName, sel_item) {
@@ -1497,10 +1510,20 @@ function($compile, $stateParams) {
                 scope.dataSaved = false;
             }
 
+            // update the compartment changes in the clone data
+            function updateComptChanges(col_key, compt_name) {
+                if( scope.dataModified ) {
+                    // Note: row 4 for localization in scope.dataClone while it is row 3 in scope.data
+                    //       i.e., row_id=4 unless further changed.
+                    updateCloneComptData(4, col_key, compt_name);
+                    scope.dataSaved = false;
+                }
+            }
+
             // update the annotation changes in the clone data
             function updateAnnoChanges(i, col_key, tab_cell, g_row) {
                 if( scope.dataModified ) {
-                    updateCloneData(i, col_key, tab_cell, g_row);
+                    updateCloneAnnoData(i, col_key, tab_cell, g_row);
                     scope.dataSaved = false;
                 }
             }
@@ -1867,30 +1890,54 @@ function($compile, $stateParams) {
                 return xmldoc;
             }
 
-            // context menu open
+            // context menu open for compartment selection
             // e: triggering event;
             // i: selected index of the array to be repeated on;
-            // g: gene element in the array for repetition;
             // r: the row of data in the subsys 'data';
             // h: the column header of the selected cell
-            scope.openMenu = function(e, i, g, r, h) {
-                scope.selectGene(e, i, g, r, h);
+            scope.openComptMenu = function(e, i, r, h) {
+                scope.selectCompt(e, i, r, h);
             }
 
             // context menu close
-            scope.closeMenu = function(e, i, g, r, h) {
-                scope.selected = undefined;
+            scope.closeComptMenu = function(e, h) {
+                scope.selectedCompt = undefined;
             }
 
-            // parse the data for scope.selected
+            // parse the data for scope.selectedCompt
+            // e: triggering event;
+            // i: selected index of the array to be repeated on;
+            // r: the row of data in the subsys 'data';
+            // h: the column header of the selected cell
+            scope.selectCompt = function(e, i, r, h) {
+                scope.selectedCompt = {genome: r.Genome, col_key: h.key};
+                e.stopPropagation();
+                e.preventDefault();
+            }
+
+            // context menu open for annotation selection
             // e: triggering event;
             // i: selected index of the array to be repeated on;
             // g: gene element in the array for repetition;
             // r: the row of data in the subsys 'data';
             // h: the column header of the selected cell
-            scope.selectGene = function(e, i, g, r, h) {
-                scope.selected = {gene_id: g.feature, genome: r.Genome, g_row: i, col_key: h.key};
-                // scope.famTrees = scope.myFamtrees[scope.selected.func_name];
+            scope.openAnnoMenu = function(e, i, g, r, h) {
+                scope.selectAnno(e, i, g, r, h);
+            }
+
+            // context menu close
+            scope.closeAnnoMenu = function(e, i, g, r, h) {
+                scope.selectedAnno = undefined;
+            }
+
+            // parse the data for scope.selectedAnno
+            // e: triggering event;
+            // i: selected index of the array to be repeated on;
+            // g: gene element in the array for repetition;
+            // r: the row of data in the subsys 'data';
+            // h: the column header of the selected cell
+            scope.selectAnno = function(e, i, g, r, h) {
+                scope.selectedAnno = {gene_id: g.feature, genome: r.Genome, g_row: i, col_key: h.key};
                 e.stopPropagation();
                 e.preventDefault();
             }
@@ -2017,7 +2064,26 @@ function($compile, $stateParams) {
                 scope.operations.push({op: operation.op, items: operation.items})
             })
 
-            function updateCloneData(row_id, col_key, cell_data, g_row) {
+            function updateCloneData(something) {
+
+            }
+
+            function updateCloneComptData(row_id, col_key, compt_name) {
+                var func_arr = scope.dataClone[0]['Genome'], col_id;
+                for (var i=0; i<func_arr.length; i++) {
+                    if (func_arr[i] === col_key) {
+                        col_id = i;
+                        break;
+                    }
+                }
+                // Note: row 3 for localization in scope.dataClone while it is row 4 in scope.data
+                //       i.e., row_id=3 unless further changed.
+                //       gnm_key must be 'Localizations'.
+                var gnm_key = Object.keys(scope.dataClone[row_id])[0];
+                scope.dataClone[row_id][gnm_key][col_id].push(compt_name);
+            }
+
+            function updateCloneAnnoData(row_id, col_key, cell_data, g_row) {
                 var func_arr = scope.dataClone[0]['Genome'], col_id;
                 for (var i=0; i<func_arr.length; i++) {
                     if (func_arr[i] === col_key) {
