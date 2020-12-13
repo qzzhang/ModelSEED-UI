@@ -117,7 +117,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     $s.captions = [];
     $s.topRows = [];
     $s.compartments = getCompartments();
-    $s.geneannos = ['curation', 'prediction'];
+    $s.geneannos = ['set gene to curation', 'set gene to prediction', 'show gene details'];
 
     // loading the subsystem data (in json format)
     $s.loading = true;

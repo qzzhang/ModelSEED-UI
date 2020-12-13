@@ -107,7 +107,7 @@
                     context-menu="openAnnoMenu($event, $index, g, row, h)"
                     context-menu-close="closeAnnoMenu($event, g, row, h)"
                     data-target="dropdown-menu-target-anno"
-                    title="Right click to specify annotation">
+                    title="Right click to set annotation or to see details.">
                     <span ng-if="g['curation']" style="color: green;">
                         {{g['feature']}}<br>
                     </span>
@@ -138,8 +138,9 @@
             <li ng-repeat="ga in geneannos">
                 <a role="menuitem" tabindex="1"
                    ng-click="annoSelected($event, ga, selectedAnno)">
-                   <span ng-if="ga == 'curation'" style="color:green">{{ga}}</span>
-                   <span ng-if="ga == 'prediction'" style="color:blue">{{ga}}</span>
+                   <span ng-if="ga.indexOf('curation') >= 0" style="color:green">{{ga}}</span>
+                   <span ng-if="ga.indexOf('prediction') >= 0" style="color:blue">{{ga}}</span>
+                   <span ng-if="ga.indexOf('details') >= 0" style="color: black">{{ga}}</span>
                 </a>
             </li>
         </ul>

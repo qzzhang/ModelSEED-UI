@@ -1446,6 +1446,32 @@ function($compile, $stateParams) {
             scope.selectedAnno = {};
             scope.promoted = [];
 
+            // popup a window for gene details
+            // row_id: selected index of dataClone array to be repeated on;
+            // col_key: function role name of the selected column;
+            // g_row: index of selected gene element in the array for repetition;
+            scope.getGeneDetails = function(ev, row_id, col_key, g_row) {
+                var col_id = getColIdByColKey(col_key);
+                if (col_id == -1) {
+                    return;
+                }
+                // Note: Because in scope.dataClone, row 0 data is for Genom/function roles, row 1 for families, row 2 for reactions,
+                //       row 3 for cofactors and row 4 for localization,
+                //       while in scope.data header is singled out and row 0 is families.  Therefore, an offset of 1 is added to the row index.
+                var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
+                var gene_data = scope.dataClone[row_id+1][gnm_key][col_id][g_row];
+
+                Dialogs.showGene(ev, gene_data,
+                function(gene) {
+                    console.log('modified gene object: ', JSON.stringify(gene));
+                    gene_data = gene;
+                    rememberToSave();
+                });
+
+                ev.stopPropagation();
+                ev.preventDefault();
+            }
+
             scope.cellDblClick = function(ev, row_col, usr) {
                 scope.selectedCell = row_col;
                 var can_id = 'can_' + row_col;
@@ -1485,7 +1511,7 @@ function($compile, $stateParams) {
             }
 
             scope.annoSelected = function(ev, annoName, sel_item) {
-                alert("Modify the gene annotation to be \"" + annoName + "\"?");
+                alert("Would you like to \"" + annoName + "\"?");
                 // Change the gene_id text color depending on the selected values
                 var i, tab_cell, genome_name = sel_item.genome, idx = sel_item.g_row;
                 for (i = 4; i < scope.data.length; i++) {
@@ -1494,13 +1520,16 @@ function($compile, $stateParams) {
                         break;
                     }
                 }
-                if (annoName == 'curation') {
+                if (annoName.indexOf('curation') >= 0) {
                     tab_cell[idx].curation = 1;
                     tab_cell[idx].prediction = 0;
-                } else if (annoName == 'prediction') {
+            } else if (annoName.indexOf('prediction') >= 0) {
                     tab_cell[idx].curation = 0;
                     tab_cell[idx].prediction = 1;
+                } else {
+                    scope.getGeneDetails(ev, i, sel_item.col_key, idx);
                 }
+
                 rememberToSave();
                 updateAnnoChanges(i, sel_item.col_key, tab_cell, idx);
             }
@@ -2069,12 +2098,9 @@ function($compile, $stateParams) {
             }
 
             function updateCloneComptData(row_id, col_key, compt_name) {
-                var func_arr = scope.dataClone[0]['Genome'], col_id;
-                for (var i=0; i<func_arr.length; i++) {
-                    if (func_arr[i] === col_key) {
-                        col_id = i;
-                        break;
-                    }
+                var col_id = getColIdByColKey(col_key);
+                if (col_id == -1) {
+                    return;
                 }
                 // Note: row 3 for localization in scope.dataClone while it is row 4 in scope.data
                 //       i.e., row_id=3 unless further changed.
@@ -2084,12 +2110,9 @@ function($compile, $stateParams) {
             }
 
             function updateCloneAnnoData(row_id, col_key, cell_data, g_row) {
-                var func_arr = scope.dataClone[0]['Genome'], col_id;
-                for (var i=0; i<func_arr.length; i++) {
-                    if (func_arr[i] === col_key) {
-                        col_id = i;
-                        break;
-                    }
+                var col_id = getColIdByColKey(col_key);
+                if (col_id == -1) {
+                    return;
                 }
                 // Note: Because in scope.dataClone, row 0 data is for Genom/function roles, row 1 for families, row 2 for reactions,
                 //       row 3 for cofactors and row 4 for localization,
@@ -2099,6 +2122,17 @@ function($compile, $stateParams) {
                 scope.dataClone[row_id+1][gnm_key][col_id][g_row].prediction = cell_data[g_row].prediction;
             }
 
+            function getColIdByColKey(col_k) {
+                var func_arr = scope.dataClone[0]['Genome'];
+                for (var i=0; i<func_arr.length; i++) {
+                    if (func_arr[i] === col_k) {
+                        return i;
+                    }
+                }
+                if (i == func_arr.length) {
+                    return -1;
+                }
+            }
             function getRowColIds(sel_id) {
                 /*
                 sel_id: in the form of, e.g., 'cur_row12_col3'
