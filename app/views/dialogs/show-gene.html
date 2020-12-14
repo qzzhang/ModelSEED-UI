@@ -31,6 +31,11 @@
             <div ng-if="!editingScore">
                 <pre>{{score ? score : 'No score found'}}</pre>
             </div>
+            <select id="orthologs" style="width:130px;">
+                <option ng-repeat="gk in geneOrthologKeys" value="geneOrthologs[gk]">
+                    {{gk}}
+                </option>
+            </select>
             <div ng-if="editingScore">
                 <textarea type="text"
                         ng-model="edit.score"
@@ -40,6 +45,16 @@
                 </textarea>
             </div>
         </section>
+
+        <!--The orthologs section>
+        <section>
+            <span class="editable-header">Orthologs</span>
+            <select id="orthologs" style="width:130px;">
+                <option ng-repeat="gk in geneOrthologKeys" value="geneOrthologs[gk]">
+                    {{gk}}
+                </option>
+            </select>
+        </section-->
             
         <!--The evidence_code section-->
         <section>

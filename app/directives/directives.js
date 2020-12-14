@@ -1445,6 +1445,11 @@ function($compile, $stateParams) {
             scope.selected = {};
             scope.selectedAnno = {};
             scope.promoted = [];
+            scope.headerRowsCollapsed = false;
+
+            scope.collapseHeaderRows = function() {
+                scope.headerRowsCollapsed = !scope.headerRowsCollapsed;
+            }
 
             // popup a window for gene details
             // row_id: selected index of dataClone array to be repeated on;
@@ -1523,9 +1528,9 @@ function($compile, $stateParams) {
                 if (annoName.indexOf('curation') >= 0) {
                     tab_cell[idx].curation = 1;
                     tab_cell[idx].prediction = 0;
-            } else if (annoName.indexOf('prediction') >= 0) {
-                    tab_cell[idx].curation = 0;
-                    tab_cell[idx].prediction = 1;
+                } else if (annoName.indexOf('prediction') >= 0) {
+                        tab_cell[idx].curation = 0;
+                        tab_cell[idx].prediction = 1;
                 } else {
                     scope.getGeneDetails(ev, i, sel_item.col_key, idx);
                 }

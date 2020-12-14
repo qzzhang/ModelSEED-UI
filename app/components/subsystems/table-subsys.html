@@ -62,7 +62,13 @@
                         {{::h.label.substring(0, 20)}}...
                 </th>
             </tr>
-            <tr ng-repeat="row in data.slice(0,3)">
+            <tr><th colspan="100" style="color: black; background-color: rgb(220, 228, 147);">
+                <a ng-click="collapseHeaderRows()">
+                    <span ng-show="!headerRowsCollapsed">(-)Collapse sub-Header Rows</span>
+                    <span ng-show="headerRowsCollapsed">(+)Expand sub-Header Rows</span>
+                </a>
+            </th></tr>
+            <tr ng-repeat="row in data.slice(0,3)" ng-show="!headerRowsCollapsed">
                 <th ng-repeat="h in header" style="color: black; background-color: rgb(220, 228, 147);">
                     <span ng-if="h.hasOwnProperty('formatter')" bind-html-compile="h.formatter(row[h.key])"></span>
                     <a ng-if="h.hasOwnProperty('link')" ui-sref="{{h.link.state}}( h.link.getOpts(row) )"
@@ -76,7 +82,7 @@
                     </span>
                 </th>
             </tr>
-            <tr ng-repeat="row in data.slice(3,4)">
+            <tr ng-repeat="row in data.slice(3,4)" ng-show="!headerRowsCollapsed">
                 <th ng-repeat="h in header" style="color: black; background-color: rgb(220, 228, 147);"
                     ng-class="{active: selected.index == $index}"
                     context-menu="openComptMenu($event, $index, row, h)"

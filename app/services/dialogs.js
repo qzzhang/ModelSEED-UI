@@ -93,14 +93,17 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.edit = {score: '', evidence_codes: ''};
                 //$s.validJSON = true;
                 $s.gene = geneObj; // the selected dropdown item
-                $s.geneId = Object.keys(geneObj)[0];
-                $s.score = geneObj[$s.geneId]['score'] || '';
-                var evd_codes = geneObj[$s.geneId]['evidence_codes'] ? geneObj[$s.geneId]['evidence_codes'] : [];
+                $s.geneFeature = geneObj['feature'];
+                $s.geneOrthologs = geneObj['orthologs'];  // an object
+                $s.geneOrthologKeys = Object.keys($s.geneOrthologs);  // an object
+                $s.geneId = $s.geneFeature;
+                $s.score = $s.geneOrthologs[$s.geneOrthologKeys[0]] || '';
+                var evd_codes = geneObj['evidence_codes'] ? ['evidence_codes'] : [];
                 $s.evidence_codes = (evd_codes.length>0) ? evd_codes : [];
 
-                $s.annotated_date = geneObj[$s.geneId]['annotated_date'] || '';
+                $s.annotated_date = geneObj['annotated_date'] || '';
                 $s.is_annotated = $s.annotated_date ? true : false;
-                $s.mod_history = geneObj[$s.geneId]['mod_history'] || [];
+                $s.mod_history = geneObj['mod_history'] || [];
 
                 $s.addEvdCode = function(ec_id, cm_id) {
                     var ec = document.getElementById(ec_id),
@@ -129,7 +132,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     }
                     if (!ansr1 || ansr2) {
                         $s.mod_history.push(new_ec_hist);
-                        edit_gene[$s.geneId] = {"evidence_codes": $s.evidence_codes,
+                        edit_gene = {"evidence_codes": $s.evidence_codes,
                                             "score": $s.score,
                                             "annotated_date": $s.annotated_date,
                                             "mod_history": $s.mod_history};
@@ -146,7 +149,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.updateScore = function(s) {
                     $s.updatingScore = true;
                     var edit_gene = {};
-                    edit_gene[$s.geneId]= {"evidence_code": $s.evidence_code.split('\n'),
+                    edit_gene= {"evidence_code": $s.evidence_code.split('\n'),
                                            "score": s};
                     cb(edit_gene);
                     $s.score = s;
