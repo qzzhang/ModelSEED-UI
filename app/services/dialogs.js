@@ -86,18 +86,17 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
             controller: ['$scope', '$http',
             function($s, $http) {
                 $self = $s;
-                $s.editingScore = false;
-                $s.updatingScore = false;
                 $s.validNumber = true;
                 // for scratch area to hold the user edits
-                $s.edit = {score: '', evidence_codes: ''};
+                $s.edit = {evidence_codes: ''};
                 //$s.validJSON = true;
-                $s.gene = geneObj; // the selected dropdown item
+
+                $s.gene = geneObj; // the selected item
                 $s.geneFeature = geneObj['feature'];
+                $s.geneGroup = (geneObj['curation']>0) ? 'curation' : ((geneObj['prediction']>0) ? 'prediction' : '');
                 $s.geneOrthologs = geneObj['orthologs'];  // an object
-                $s.geneOrthologKeys = Object.keys($s.geneOrthologs);  // an object
+                $s.geneOrthologKeys = Object.keys($s.geneOrthologs);  // an array
                 $s.geneId = $s.geneFeature;
-                $s.score = $s.geneOrthologs[$s.geneOrthologKeys[0]] || '';
                 var evd_codes = geneObj['evidence_codes'] ? ['evidence_codes'] : [];
                 $s.evidence_codes = (evd_codes.length>0) ? evd_codes : [];
 
@@ -133,28 +132,11 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     if (!ansr1 || ansr2) {
                         $s.mod_history.push(new_ec_hist);
                         edit_gene = {"evidence_codes": $s.evidence_codes,
-                                            "score": $s.score,
-                                            "annotated_date": $s.annotated_date,
-                                            "mod_history": $s.mod_history};
+                                     "annotated_date": $s.annotated_date,
+                                     "mod_history": $s.mod_history};
                         cb(edit_gene);
                         $s.is_annotated = true;
                     }
-                }
-
-                $s.editScore = function() {
-                    $s.editingScore = !$s.editingScore;
-                    $s.edit.score = $s.score || '';
-                }
-
-                $s.updateScore = function(s) {
-                    $s.updatingScore = true;
-                    var edit_gene = {};
-                    edit_gene= {"evidence_code": $s.evidence_code.split('\n'),
-                                           "score": s};
-                    cb(edit_gene);
-                    $s.score = s;
-                    $s.updatingScore = false;
-                    $s.editingScore = false;
                 }
 
                 $s.validateNumber = function(text) {

@@ -1529,8 +1529,11 @@ function($compile, $stateParams) {
                     tab_cell[idx].curation = 1;
                     tab_cell[idx].prediction = 0;
                 } else if (annoName.indexOf('prediction') >= 0) {
-                        tab_cell[idx].curation = 0;
-                        tab_cell[idx].prediction = 1;
+                    tab_cell[idx].curation = 0;
+                    tab_cell[idx].prediction = 1;
+                } else if (annoName.indexOf('neither') >= 0) {
+                    tab_cell[idx].curation = 0;
+                    tab_cell[idx].prediction = 0;
                 } else {
                     scope.getGeneDetails(ev, i, sel_item.col_key, idx);
                 }
@@ -2138,6 +2141,7 @@ function($compile, $stateParams) {
                     return -1;
                 }
             }
+
             function getRowColIds(sel_id) {
                 /*
                 sel_id: in the form of, e.g., 'cur_row12_col3'

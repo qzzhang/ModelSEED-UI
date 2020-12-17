@@ -13,48 +13,25 @@
     <md-content layout-margin layout-padding>
         <md-progress-circular ng-if="loading" md-mode="indeterminate"></md-progress-circular>
 
-        <!--The score section-->
+        <!--The category section-->
         <section>
-            <span class="editable-header">Score</span>
-            <span ng-if="!updatingScore && !editingScore">
-                <a ng-click="editScore()" class="no-href">edit</a>
+            <span class="editable-header">Is in:</span>
+            <span>
+                <label>{{geneGroup}}</label>
             </span>
-            <span ng-if="!updatingScore && editingScore">
-                <a ng-if="validNumber" ng-click="editScore()" class="no-link">Cancel</a> &middot;
-                <a ng-if="validNumber" ng-click="updateScore(edit.score)" class="no-href">Update</a>
-            </span>
-            <span ng-if="!updatingScore && editingScore" class="pull-right">
-                <span ng-if="!validNumber" class="pull-right color-error">Not valid score (must be in [0,1] range)</span>
-            </span>
-            <span ng-if="updatingScore">Updating...</span>
-
-            <div ng-if="!editingScore">
-                <pre>{{score ? score : 'No score found'}}</pre>
-            </div>
-            <select id="orthologs" style="width:130px;">
-                <option ng-repeat="gk in geneOrthologKeys" value="geneOrthologs[gk]">
-                    {{gk}}
-                </option>
-            </select>
-            <div ng-if="editingScore">
-                <textarea type="text"
-                        ng-model="edit.score"
-                        class="form-control editable-textarea"
-                        ng-change="validateNumber(edit.score)"
-                        ng-init="edit.score=score">
-                </textarea>
-            </div>
         </section>
 
-        <!--The orthologs section>
+        <!--The orthologs section-->
         <section>
             <span class="editable-header">Orthologs</span>
-            <select id="orthologs" style="width:130px;">
-                <option ng-repeat="gk in geneOrthologKeys" value="geneOrthologs[gk]">
-                    {{gk}}
-                </option>
-            </select>
-        </section-->
+            <div>
+                <select id="orthologs" style="width:350px;">
+                    <option ng-repeat="gk in geneOrthologKeys" value="geneOrthologs[gk]">
+                        {{gk}}
+                    </option>
+                </select>
+            </div>
+        </section>
             
         <!--The evidence_code section-->
         <section>

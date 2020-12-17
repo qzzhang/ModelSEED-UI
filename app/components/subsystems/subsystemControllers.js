@@ -117,7 +117,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     $s.captions = [];
     $s.topRows = [];
     $s.compartments = getCompartments();
-    $s.geneannos = ['set gene to curation', 'set gene to prediction', 'show gene details'];
+    $s.geneannos = ['set gene to curation', 'set gene to prediction', 'set to neither', 'show gene details'];
 
     // loading the subsystem data (in json format)
     $s.loading = true;
@@ -220,16 +220,10 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
 
     function getCompartments() {
         return [
-            'Carboxysome',
-            'Plasma Membrane',
-            'Cytosol',
-            'Stroma',
-            'Extracellular',
-            'ER_Membrane',
-            'Golgi',
-            'Mitochondria_OMem',
-            'Mitochondria_iMMem',
-            'Mitochondria_iMem'
+            'cytosol',
+            'plastid',
+            'mitochondrion',
+            'peroxisome'
         ].sort();
     }
     // Parse the given data for the subsystem data structure

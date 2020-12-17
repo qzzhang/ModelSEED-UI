@@ -120,6 +120,9 @@
                     <span ng-if="g['prediction']" style="color: blue;">
                         {{g['feature']}}<br>
                     </span>
+                    <span ng-if="!g['curation'] && !g['prediction']" style="color: black;">
+                        {{g['feature']}}<br>
+                    </span>
                 </span>
             </td>
         </tr>
@@ -146,7 +149,8 @@
                    ng-click="annoSelected($event, ga, selectedAnno)">
                    <span ng-if="ga.indexOf('curation') >= 0" style="color:green">{{ga}}</span>
                    <span ng-if="ga.indexOf('prediction') >= 0" style="color:blue">{{ga}}</span>
-                   <span ng-if="ga.indexOf('details') >= 0" style="color: black">{{ga}}</span>
+                   <span ng-if="ga.indexOf('neither') >= 0" style="color:black">{{ga}}</span>
+                   <span ng-if="ga.indexOf('details') >= 0" style="color: red">{{ga}}</span>
                 </a>
             </li>
         </ul>
