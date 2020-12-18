@@ -87,56 +87,138 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
             function($s, $http) {
                 $self = $s;
                 $s.validNumber = true;
-                // for scratch area to hold the user edits
-                $s.edit = {evidence_codes: ''};
-                //$s.validJSON = true;
+                $s.geneannos = ['curation', 'prediction', 'neither'];
 
                 $s.gene = geneObj; // the selected item
                 $s.geneFeature = geneObj['feature'];
-                $s.geneGroup = (geneObj['curation']>0) ? 'curation' : ((geneObj['prediction']>0) ? 'prediction' : '');
+                $s.annoOldGroup = {'curation': geneObj['curation'],
+                                   'prediction': geneObj['prediction']};
+                $s.annoNewGroup = {};
                 $s.geneOrthologs = geneObj['orthologs'];  // an object
                 $s.geneOrthologKeys = Object.keys($s.geneOrthologs);  // an array
                 $s.geneId = $s.geneFeature;
-                var evd_codes = geneObj['evidence_codes'] ? ['evidence_codes'] : [];
+
+                if ($s.gene['curation'] == 1) {
+                    $s.selected = 'curation';
+                } else if ($s.gene['prediction'] == 1) {
+                    $s.selected = 'prediction';
+                } else {
+                    $s.selected = 'neither';
+                }
+
+                var evd_codes = geneObj['evidence_codes'] ? geneObj['evidence_codes'] : [];
                 $s.evidence_codes = (evd_codes.length>0) ? evd_codes : [];
 
                 $s.annotated_date = geneObj['annotated_date'] || '';
                 $s.is_annotated = $s.annotated_date ? true : false;
-                $s.mod_history = geneObj['mod_history'] || [];
+                $s.annotation = geneObj['annotation'] || {};
+                $s.mod_history = $s.annotation['mod_history'] || [];
+                $s.has_changes = false;
 
+                $s.new_anno_hist = {};
+                $s.annoSelectedChanged = function(sel_id) {
+                    var x = document.getElementById(sel_id).value;
+                    if (x.indexOf('curation') >= 0) {
+                        $s.annoNewGroup = {'curation': 1, 'prediction': 0};
+                    } else if (x.indexOf('prediction') >= 0) {
+                        $s.annoNewGroup = {'prediction': 1, 'curation': 0};
+                    } else {
+                        $s.annoNewGroup = {'curation': 0, 'prediction': 0};
+                    }
+                    if ($s.annoNewGroup['curation'] == $s.annoOldGroup['curation']
+                            && $s.annoNewGroup['prediction'] == $s.annoOldGroup['prediction']) {
+                        return;
+                    }
+                    $s.annotated_date = new Date().toISOString().slice(0, 10);
+                    $s.new_anno_hist = {
+                        "curation": $s.annoNewGroup['curation'],
+                        "prediction": $s.annoNewGroup['prediction'],
+                        "user": Auth.user,
+                        "annotated_date": $s.annotated_date
+                    };
+                    $s.annoOldGroup['curation'] = $s.annoNewGroup['curation'];
+                    $s.annoOldGroup['prediction'] = $s.annoNewGroup['prediction'];
+                    $s.level_is_annotated = true;
+                }
+
+                $s.new_ec_hist = {};
                 $s.addEvdCode = function(ec_id, cm_id) {
                     var ec = document.getElementById(ec_id),
                         cm = document.getElementById(cm_id);
-                    var edit_gene = {};
-                    var ansr1 = false, ansr2 = false;
-                    $s.annotated_date = new Date().toISOString().slice(0, 10);
-                    var new_ec_hist = {
+                    if ($s.evidence_codes.includes(ec.value)) {
+                        return;
+                    }
+
+                    var annotated_date = new Date().toISOString().slice(0, 10);
+                    $s.new_ec_hist = {
                         "evidence_code": ec.value,
                         "user": Auth.user,
                         "comment": cm.value,
                         "annotated_date": $s.annotated_date
                     };
+                    $s.ec_is_annotated = true;
+                }
+
+                function addEC2ModHist(new_hist) {
+                    var ansr1 = false, ansr2 = false;
                     for (var i=0; i<$s.mod_history.length; i++) {
-                        if ($s.mod_history[i]['evidence_code']===new_ec_hist['evidence_code']
-                            && $s.mod_history[i]['comment']===new_ec_hist['comment']
-                            && $s.mod_history[i]['annotated_date']===new_ec_hist['annotated_date']
-                            && $s.mod_history[i]['user']===new_ec_hist['user']) {
+                        if ($s.mod_history[i]['evidence_code']==new_hist['evidence_code']
+                            && $s.mod_history[i]['comment']==new_hist['comment']
+                            && $s.mod_history[i]['annotated_date']==new_hist['annotated_date']
+                            && $s.mod_history[i]['user']==new_hist['user']) {
                             ansr1 = true;
+                            $s.ec_is_annotated = false;
                             break;
                         }
                     }
-                    if (!$s.evidence_codes.includes(ec.value)) {
+                    if (!$s.evidence_codes.includes(new_hist['evidence_code'])) {
                         ansr2 = true;
-                        $s.evidence_codes.push(ec.value);
+                        $s.evidence_codes.push(new_hist['evidence_code']);
                     }
                     if (!ansr1 || ansr2) {
-                        $s.mod_history.push(new_ec_hist);
-                        edit_gene = {"evidence_codes": $s.evidence_codes,
-                                     "annotated_date": $s.annotated_date,
-                                     "mod_history": $s.mod_history};
-                        cb(edit_gene);
+                        // $s.mod_history.push(new_hist);
                         $s.is_annotated = true;
+                        $s.has_changes = true;
                     }
+                }
+
+                function addAnno2ModHist(new_hist) {
+                    for (var i=0; i<$s.mod_history.length; i++) {
+                        if ($s.mod_history[i]['curation']==new_hist['curation']
+                            && $s.mod_history[i]['prediction']==new_hist['prediction']) {
+                            $s.level_is_annotated = false;
+                            return;
+                        }
+                    }
+                    // $s.mod_history.push(new_hist);
+                    $s.is_annotated = true;
+                    $s.has_changes = true;
+                }
+
+                $s.refreshChanges = function() {
+                    if ($s.level_is_annotated) {
+                        addAnno2ModHist($s.new_anno_hist);
+                        $s.gene['curation'] = $s.new_anno_hist['curation'];
+                        $s.gene['prediction'] = $s.new_anno_hist['prediction'];
+                    }
+                    if ($s.ec_is_annotated) {
+                        addEC2ModHist($s.new_ec_hist);
+                        $s.gene['evidence_codes'] = $s.evidence_codes;
+                    }
+                }
+
+                $s.submitChanges = function() {
+                    if ($s.level_is_annotated) {
+                        $s.mod_history.push($s.new_anno_hist);
+                        $s.level_is_annotated = false;
+                    }
+                    if ($s.ec_is_annotated) {
+                        $s.mod_history.push($s.new_ec_hist);
+                        $s.ec_is_annotated = false;
+                    }
+                    $s.gene['annotation']['mod_history'] = $s.mod_history;
+                    cb($s.gene);
+                    $dialog.hide();
                 }
 
                 $s.validateNumber = function(text) {

@@ -1470,6 +1470,9 @@ function($compile, $stateParams) {
                 function(gene) {
                     console.log('modified gene object: ', JSON.stringify(gene));
                     gene_data = gene;
+                    var tab_cell = scope.data[row_id][col_key];
+                    tab_cell[g_row].curation = gene['curation'];
+                    tab_cell[g_row].prediction = gene['prediction'];
                     rememberToSave();
                 });
 

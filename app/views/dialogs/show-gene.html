@@ -13,16 +13,21 @@
     <md-content layout-margin layout-padding>
         <md-progress-circular ng-if="loading" md-mode="indeterminate"></md-progress-circular>
 
-        <!--The category section-->
+        <!--The annotation level section-->
         <section>
-            <span class="editable-header">Is in:</span>
+            <span class="editable-header">Gene Annotation Level:</span>
             <span>
                 <label>{{geneGroup}}</label>
             </span>
+            <div>
+                <select id="annoSelect" style="width:350px;" ng-change="annoSelectedChanged('annoSelect')" ng-model="selected">
+                    <option ng-repeat="ga in geneannos" ng-selected="ga==selected">{{ga}}</option>
+                </select>
+            </div>
         </section>
 
         <!--The orthologs section-->
-        <section>
+        <!--section>
             <span class="editable-header">Orthologs</span>
             <div>
                 <select id="orthologs" style="width:350px;">
@@ -31,7 +36,7 @@
                     </option>
                 </select>
             </div>
-        </section>
+        </section-->
             
         <!--The evidence_code section-->
         <section>
@@ -56,11 +61,13 @@
             <span class="editable-header">Annotation history</span>
             <table class="popup_table">
                 <tr>
-                    <th>evidence_code</th><th>comment</th><th>user</th><th>annotated_date</th>
+                    <th>evidence_code</th><th>comment</th><th>curation</th><th>prediction</th><th>user</th><th>annotated_date</th>
                 </tr>
                 <tr ng-repeat="mh in mod_history">
                     <td>{{mh.evidence_code}}</td>
                     <td>{{mh.comment}}</td>
+                    <td>{{mh.curation}}</td>
+                    <td>{{mh.prediction}}</td>
                     <td>{{mh.user}}</td>
                     <td>{{mh.annotated_date}}</td>
                 </tr>
@@ -71,8 +78,14 @@
     </md-content>
 
     <div class="md-actions">
+        <md-button ng-click="refreshChanges()">
+            Refresh
+        </md-button>
+        <md-button ng-if="has_changes" ng-click="submitChanges()">
+            Submit
+        </md-button>
         <md-button ng-click="cancel()">
-            Close
+            Cancel
         </md-button>
     </div>
 </md-dialog>
