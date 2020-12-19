@@ -94,9 +94,6 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.annoOldGroup = {'curation': geneObj['curation'],
                                    'prediction': geneObj['prediction']};
                 $s.annoNewGroup = {};
-                $s.geneOrthologs = geneObj['orthologs'];  // an object
-                $s.geneOrthologKeys = Object.keys($s.geneOrthologs);  // an array
-                $s.geneId = $s.geneFeature;
 
                 if ($s.gene['curation'] == 1) {
                     $s.selected = 'curation';

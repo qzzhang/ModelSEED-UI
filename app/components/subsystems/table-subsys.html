@@ -109,20 +109,16 @@
             <td>{{::row[header[0].key]}}</td>
             <td ng-repeat="h in header.slice(1)" style="border: 1px solid black;">
                 <span ng-repeat="g in row[h.key]"
-                    ng-class="{active: selected.index == $index}"
-                    context-menu="openAnnoMenu($event, $index, g, row, h)"
-                    context-menu-close="closeAnnoMenu($event, g, row, h)"
-                    data-target="dropdown-menu-target-anno"
-                    title="Right click to set annotation or to see details.">
-                    <span ng-if="g['curation']" style="color: green;">
+                    title="Click to annotate or to view details.">
+                    <a ng-if="g['curation']" style="color: green;" ng-click="onGeneClicked($event, g, row, h)">
                         {{g['feature']}}<br>
-                    </span>
-                    <span ng-if="g['prediction']" style="color: blue;">
+                    </a>
+                    <a ng-if="g['prediction']" style="color: blue;" ng-click="onGeneClicked($event, g, row, h)">
                         {{g['feature']}}<br>
-                    </span>
-                    <span ng-if="!g['curation'] && !g['prediction']" style="color: black;">
+                    </a>
+                    <a ng-if="!g['curation'] && !g['prediction']" style="color: black;" ng-click="onGeneClicked($event, g, row, h)">
                         {{g['feature']}}<br>
-                    </span>
+                    </a>
                 </span>
             </td>
         </tr>
@@ -136,21 +132,6 @@
                 <a role="menuitem" tabindex="1"
                    ng-click="comptSelected($event, c, selectedCompt)">
                    {{c}}
-                </a>
-            </li>
-        </ul>
-    </div>
-
-    <!-- right click dropdown context menu -->
-    <div class="dropdown position-fixed" id="dropdown-menu-target-anno" style="z-index: 5">
-        <ul class="dropdown-menu" role="menu">
-            <li ng-repeat="ga in geneannos">
-                <a role="menuitem" tabindex="1"
-                   ng-click="annoSelected($event, ga, selectedAnno)">
-                   <span ng-if="ga.indexOf('curation') >= 0" style="color:green">{{ga}}</span>
-                   <span ng-if="ga.indexOf('prediction') >= 0" style="color:blue">{{ga}}</span>
-                   <span ng-if="ga.indexOf('neither') >= 0" style="color:black">{{ga}}</span>
-                   <span ng-if="ga.indexOf('details') >= 0" style="color: red">{{ga}}</span>
                 </a>
             </li>
         </ul>

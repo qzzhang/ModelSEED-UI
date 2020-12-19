@@ -1416,7 +1416,6 @@ function($compile, $stateParams) {
             allFamtrees: '=tableAllFamtrees',
             myFamtrees: '=tableMyFamtrees',
             compartments: '=tableCompartments',
-            geneannos: '=tableGeneannos',
             loading: '=tableLoading',
             isDemo: '=tableIsDemo',
             cellClick: '=tableCellClick',
@@ -1443,7 +1442,6 @@ function($compile, $stateParams) {
             scope.dataSaved = true;
             scope.treeData = null;
             scope.selected = {};
-            scope.selectedAnno = {};
             scope.promoted = [];
             scope.headerRowsCollapsed = false;
 
@@ -1455,6 +1453,7 @@ function($compile, $stateParams) {
             // row_id: selected index of dataClone array to be repeated on;
             // col_key: function role name of the selected column;
             // g_row: index of selected gene element in the array for repetition;
+            //scope.getGeneDetails = function(ev, row_id, col_key, g_row) {
             scope.getGeneDetails = function(ev, row_id, col_key, g_row) {
                 var col_id = getColIdByColKey(col_key);
                 if (col_id == -1) {
@@ -1480,28 +1479,6 @@ function($compile, $stateParams) {
                 ev.preventDefault();
             }
 
-            scope.cellDblClick = function(ev, row_col, usr) {
-                scope.selectedCell = row_col;
-                var can_id = 'can_' + row_col;
-                var cell_info = getRowColIds(can_id);
-                var gene_group_name = cell_info['gene_group'],
-                    row_id = cell_info['row_id'],
-                    col_id = cell_info['col_id'];
-                scope.sel_cand = document.getElementById(can_id);
-
-                // Note: Because in scope.dataClone, row 0 data is for Genom & function roles and row 1 is for reactions,
-                //       with row 0 as the table header, row 1 in the table should bear the data of row 2 in scope.dataClone
-                Dialogs.showGene(ev, scope.dataClone[row_id+1][col_id]["candidates"][scope.sel_cand.selectedIndex],
-                function(gene) {
-                    console.log('modified gene object: ', JSON.stringify(gene));
-                    scope.dataClone[row_id+1][col_id]["candidates"][scope.sel_cand.selectedIndex] = gene;
-                    rememberToSave();
-                });
-
-                ev.stopPropagation();
-                ev.preventDefault();
-            }
-
             scope.comptSelected = function(ev, comptName, sel_item) {
                 // Add the selected compartment value to the end of the existing localization array
                 alert("Compartment " + comptName + " is selected!");
@@ -1518,33 +1495,6 @@ function($compile, $stateParams) {
                 updateComptChanges(sel_item.col_key, lower_cmpt);
             }
 
-            scope.annoSelected = function(ev, annoName, sel_item) {
-                alert("Would you like to \"" + annoName + "\"?");
-                // Change the gene_id text color depending on the selected values
-                var i, tab_cell, genome_name = sel_item.genome, idx = sel_item.g_row;
-                for (i = 4; i < scope.data.length; i++) {
-                    if (scope.data[i]['Genome'] === genome_name) {
-                        tab_cell = scope.data[i][sel_item.col_key];
-                        break;
-                    }
-                }
-                if (annoName.indexOf('curation') >= 0) {
-                    tab_cell[idx].curation = 1;
-                    tab_cell[idx].prediction = 0;
-                } else if (annoName.indexOf('prediction') >= 0) {
-                    tab_cell[idx].curation = 0;
-                    tab_cell[idx].prediction = 1;
-                } else if (annoName.indexOf('neither') >= 0) {
-                    tab_cell[idx].curation = 0;
-                    tab_cell[idx].prediction = 0;
-                } else {
-                    scope.getGeneDetails(ev, i, sel_item.col_key, idx);
-                }
-
-                rememberToSave();
-                updateAnnoChanges(i, sel_item.col_key, tab_cell, idx);
-            }
-
             function rememberToSave() {
                 scope.dataModified = true;
                 scope.dataSaved = false;
@@ -1556,14 +1506,6 @@ function($compile, $stateParams) {
                     // Note: row 4 for localization in scope.dataClone while it is row 3 in scope.data
                     //       i.e., row_id=4 unless further changed.
                     updateCloneComptData(4, col_key, compt_name);
-                    scope.dataSaved = false;
-                }
-            }
-
-            // update the annotation changes in the clone data
-            function updateAnnoChanges(i, col_key, tab_cell, g_row) {
-                if( scope.dataModified ) {
-                    updateCloneAnnoData(i, col_key, tab_cell, g_row);
                     scope.dataSaved = false;
                 }
             }
@@ -1955,29 +1897,15 @@ function($compile, $stateParams) {
                 e.preventDefault();
             }
 
-            // context menu open for annotation selection
-            // e: triggering event;
+            // respond when a gene object in a table cell is clicked
+            // ev: triggering event;
             // i: selected index of the array to be repeated on;
             // g: gene element in the array for repetition;
             // r: the row of data in the subsys 'data';
             // h: the column header of the selected cell
-            scope.openAnnoMenu = function(e, i, g, r, h) {
-                scope.selectAnno(e, i, g, r, h);
-            }
-
-            // context menu close
-            scope.closeAnnoMenu = function(e, i, g, r, h) {
-                scope.selectedAnno = undefined;
-            }
-
-            // parse the data for scope.selectedAnno
-            // e: triggering event;
-            // i: selected index of the array to be repeated on;
-            // g: gene element in the array for repetition;
-            // r: the row of data in the subsys 'data';
-            // h: the column header of the selected cell
-            scope.selectAnno = function(e, i, g, r, h) {
-                scope.selectedAnno = {gene_id: g.feature, genome: r.Genome, g_row: i, col_key: h.key};
+            scope.onGeneClicked = function(ev, g, r, h) {
+                var gloc = getGeneLocation(r, g, h);
+                scope.getGeneDetails(ev, gloc['row_id'], h.key, gloc['g_row']);
                 e.stopPropagation();
                 e.preventDefault();
             }
@@ -2143,6 +2071,30 @@ function($compile, $stateParams) {
                 if (i == func_arr.length) {
                     return -1;
                 }
+            }
+
+            /*
+            row: data row of scope.data
+            g_obj: gene object selected
+            hd: column header of selected gene object
+            return: {'gene': g_obj, row_id': 12, 'g_row': 3}
+            */
+            function getGeneLocation(row, g_obj, hd) {
+                var row_id, g_row, gnm1 = row.Genome, gnm2;
+                for (var i = 4; i < scope.data.length; i++) {
+                    gnm2 = scope.data[i].Genome;
+                    if ( gnm1 == gnm2) {
+                        row_id = i;
+                        break;
+                    }
+                }
+                for (var j = 0; j < row[hd.key].length; j++) {
+                    if (row[hd.key][j]['feature'] == g_obj.feature) {
+                        g_row = j;
+                        break;
+                    }
+                }
+                return {'gene': g_obj, 'row_id': row_id, 'g_row': g_row}
             }
 
             function getRowColIds(sel_id) {

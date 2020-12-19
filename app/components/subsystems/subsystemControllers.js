@@ -117,7 +117,6 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
     $s.captions = [];
     $s.topRows = [];
     $s.compartments = getCompartments();
-    $s.geneannos = ['set gene to curation', 'set gene to prediction', 'set to neither', 'show gene details'];
 
     // loading the subsystem data (in json format)
     $s.loading = true;
@@ -222,7 +221,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         return [
             'cytosol',
             'plastid',
-            'mitochondrion',
+            'mitochondria',
             'peroxisome'
         ].sort();
     }

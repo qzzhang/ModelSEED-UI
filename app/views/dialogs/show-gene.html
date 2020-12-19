@@ -15,28 +15,13 @@
 
         <!--The annotation level section-->
         <section>
-            <span class="editable-header">Gene Annotation Level:</span>
-            <span>
-                <label>{{geneGroup}}</label>
-            </span>
+            <span class="editable-header">Gene Level:</span>
             <div>
                 <select id="annoSelect" style="width:350px;" ng-change="annoSelectedChanged('annoSelect')" ng-model="selected">
                     <option ng-repeat="ga in geneannos" ng-selected="ga==selected">{{ga}}</option>
                 </select>
             </div>
         </section>
-
-        <!--The orthologs section-->
-        <!--section>
-            <span class="editable-header">Orthologs</span>
-            <div>
-                <select id="orthologs" style="width:350px;">
-                    <option ng-repeat="gk in geneOrthologKeys" value="geneOrthologs[gk]">
-                        {{gk}}
-                    </option>
-                </select>
-            </div>
-        </section-->
             
         <!--The evidence_code section-->
         <section>
@@ -79,7 +64,7 @@
 
     <div class="md-actions">
         <md-button ng-click="refreshChanges()">
-            Refresh
+            Confirm Change(s)
         </md-button>
         <md-button ng-if="has_changes" ng-click="submitChanges()">
             Submit
