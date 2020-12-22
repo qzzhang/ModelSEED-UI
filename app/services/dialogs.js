@@ -77,7 +77,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
         })
     }
 
-    this.showGene = function(ev, geneObj, cb) {
+    this.showGene = function(ev, geneObj, col_k, cb) {
         ev.stopPropagation();
         $dialog.show({
             templateUrl: 'app/views/dialogs/show-gene.html',
@@ -127,14 +127,18 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         return;
                     }
                     $s.annotated_date = new Date().toISOString().slice(0, 10);
+                    var cmg = document.getElementById('cmg'),
+                        doi = document.getElementById('doi');
                     $s.new_anno_hist = {
                         "curation": $s.annoNewGroup['curation'],
                         "prediction": $s.annoNewGroup['prediction'],
+                        "function": col_k,
+                        "comment": cmg.value,
+                        "genesInvolved": $s.geneFeature,
                         "user": Auth.user,
-                        "annotated_date": $s.annotated_date
+                        "annotated_date": $s.annotated_date,
+                        "DOI": doi.value
                     };
-                    $s.annoOldGroup['curation'] = $s.annoNewGroup['curation'];
-                    $s.annoOldGroup['prediction'] = $s.annoNewGroup['prediction'];
                     $s.level_is_annotated = true;
                 }
 
@@ -173,9 +177,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         $s.evidence_codes.push(new_hist['evidence_code']);
                     }
                     if (!ansr1 || ansr2) {
-                        // $s.mod_history.push(new_hist);
-                        $s.is_annotated = true;
-                        $s.has_changes = true;
+                        $s.mod_history.push(new_hist);
                     }
                 }
 
@@ -187,30 +189,32 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                             return;
                         }
                     }
-                    // $s.mod_history.push(new_hist);
-                    $s.is_annotated = true;
-                    $s.has_changes = true;
+                    $s.mod_history.push(new_hist);
                 }
 
                 $s.refreshChanges = function() {
                     if ($s.level_is_annotated) {
-                        addAnno2ModHist($s.new_anno_hist);
                         $s.gene['curation'] = $s.new_anno_hist['curation'];
                         $s.gene['prediction'] = $s.new_anno_hist['prediction'];
+                        $s.annoOldGroup['curation'] = $s.annoNewGroup['curation'];
+                        $s.annoOldGroup['prediction'] = $s.annoNewGroup['prediction'];
                     }
                     if ($s.ec_is_annotated) {
-                        addEC2ModHist($s.new_ec_hist);
                         $s.gene['evidence_codes'] = $s.evidence_codes;
+                    }
+                    if ($s.level_is_annotated || $s.ec_is_annotated) {
+                        $s.is_annotated = true;
+                        $s.has_changes = true;
                     }
                 }
 
                 $s.submitChanges = function() {
                     if ($s.level_is_annotated) {
-                        $s.mod_history.push($s.new_anno_hist);
+                        addAnno2ModHist($s.new_anno_hist);
                         $s.level_is_annotated = false;
                     }
                     if ($s.ec_is_annotated) {
-                        $s.mod_history.push($s.new_ec_hist);
+                        addEC2ModHist($s.new_ec_hist);
                         $s.ec_is_annotated = false;
                     }
                     $s.gene['annotation']['mod_history'] = $s.mod_history;
@@ -223,7 +227,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     if (isNaN(text) || text < 0 || text > 1) {
                         $s.validNumber = false;
                     } else {
-                      $s.validNumber = true;
+                        $s.validnumber = true;
                     }
                 }
 

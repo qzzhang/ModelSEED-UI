@@ -1465,7 +1465,7 @@ function($compile, $stateParams) {
                 var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
                 var gene_data = scope.dataClone[row_id+1][gnm_key][col_id][g_row];
 
-                Dialogs.showGene(ev, gene_data,
+                Dialogs.showGene(ev, gene_data, col_key,
                 function(gene) {
                     console.log('modified gene object: ', JSON.stringify(gene));
                     gene_data = gene;
