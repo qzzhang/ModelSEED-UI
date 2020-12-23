@@ -1906,8 +1906,8 @@ function($compile, $stateParams) {
             scope.onGeneClicked = function(ev, g, r, h) {
                 var gloc = getGeneLocation(r, g, h);
                 scope.getGeneDetails(ev, gloc['row_id'], h.key, gloc['g_row']);
-                e.stopPropagation();
-                e.preventDefault();
+                ev.stopPropagation();
+                ev.preventDefault();
             }
 
             scope.addSelected = function(ev, cand, dest, usr) {

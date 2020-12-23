@@ -14,7 +14,7 @@
                     {{saveAsInProgress ? saveInProgressText : 'Save as...'}}
                 </md-button>
                 <span ng-if="dataModified && !dataSaved" class="pull-right color-error">
-                    Note: Data has been modified but not saved yet.
+                    Note: Data has been modified in memory but not yet saved.
                 </span>
             </md-input-container>
             <md-progress-circular ng-if="loading || listAllSubsysFamTrees"

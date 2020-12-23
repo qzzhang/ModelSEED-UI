@@ -15,16 +15,16 @@
 
         <!--The annotation level section-->
         <section>
-            <span ng-if="is_annotated" class="pull-right">
-                <label>Last annotated on: {{annotated_date}}</label>
+            <span ng-if="has_gene_anno || has_ec_anno" class="pull-right">
+                <label>Last annotated on: {{date_annotated}}</label>
             </span>
             <div>
                 <span class="editable-header">Gene Level:</span><br>
                 <select id="annoSelect" style="width:350px;" ng-change="annoSelectedChanged('annoSelect')" ng-model="selected">
-                    <option ng-repeat="ga in geneannos" ng-selected="ga==selected">{{ga}}</option>
+                    <option ng-repeat="ga in geneannos" ng-selected="ga==selected">{{ga}}</option>>
                 </select>
                 <input id="cmg" type="text", placeholder='reason why'></input>
-                <input id="doi" type="text", placeholder='DOI'></input>
+                <input id="doi1" type="text", placeholder='DOI'></input>
             </div>
         </section>
             
@@ -38,7 +38,8 @@
                 <span class="editable-header">Enter new evidence code:</span><br>
                 <input id="evc" type="text", placeholder='evidence code'></input>
                 <input id="cmt" type="text", placeholder='comment'></input>
-                <a ng-click="addEvdCode('evc', 'cmt')" class="no-href">Add</a>
+                <input id="doi2" type="text", placeholder='DOI'></input>
+                <a ng-click="addEvdCode('evc', 'cmt', 'doi2')" class="no-href">Add</a>
             </div>
         </section>
         <br>
@@ -49,7 +50,7 @@
             <table class="popup_table">
                 <tr>
                     <th>evidence_code</th><th>comment/reason</th><th>curation</th><th>prediction</th>
-                    <th>function</th><th>genes involved</th><th>user</th><th>annotated_date</th><th>DOI</th>
+                    <th>function</th><th>genes involved</th><th>user</th><th>annotate date</th><th>DOI</th>
                 </tr>
                 <tr ng-repeat="mh in mod_history">
                     <td>{{mh.evidence_code}}</td>
@@ -59,7 +60,7 @@
                     <td>{{mh.function}}</td>
                     <td>{{mh.genesInvolved}}</td>
                     <td>{{mh.user}}</td>
-                    <td>{{mh.annotated_date}}</td>
+                    <td>{{mh.date_annotated}}</td>
                     <td>{{mh.DOI}}</td>
                 </tr>
             </table>
@@ -69,12 +70,8 @@
     </md-content>
 
     <div class="md-actions">
-        <md-button ng-click="refreshChanges()" title="click to confirm changes"
-                   ng-if="level_is_annotated || ec_is_annotated">
-            Confirm Change(s)
-        </md-button>
-        <md-button ng-if="has_changes" ng-click="submitChanges()" title="click to submit your changes">
-            Submit
+        <md-button ng-if="has_gene_anno || has_ec_anno" ng-click="submitChanges()" title="click to submit your changes">
+            Submit changes
         </md-button>
         <md-button ng-click="cancel()">
             Cancel
