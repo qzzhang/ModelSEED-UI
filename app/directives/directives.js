@@ -1476,7 +1476,6 @@ function($compile, $stateParams) {
                     tab_cell[g_row].curation = gene['curation'];
                     tab_cell[g_row].prediction = gene['prediction'];
                     tab_cell[g_row].showModHist = true;
-                    tab_cell[g_row].modHist = mod_hist;
                     rememberToSave();
                 });
 

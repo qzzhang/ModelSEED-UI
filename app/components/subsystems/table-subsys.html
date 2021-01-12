@@ -108,9 +108,9 @@
                         | limitTo : opts.limit : opts.offset)">
             <td>{{::row[header[0].key]}}</td>
             <td ng-repeat="h in header.slice(1)" style="border: 1px solid black;">
-                <span ng-repeat="g in row[h.key]"
+                <span ng-repeat="g in row[h.key]" ng-style="g['showModHist']? {'background-color': 'rgb(245, 219, 245)'}: {'background-color': 'white'}"
                     title="Click to annotate gene or to view its details.">
-                    <a ng-if="g['curation']" style="color: green;" ng-click="onGeneClicked($event, g, row, h)">
+                    <a ng-if="g['curation']" style="color: rgb(8, 231, 8);" ng-click="onGeneClicked($event, g, row, h)">
                         {{g['feature']}}
                     </a>
                     <a ng-if="g['prediction']" style="color: blue;" ng-click="onGeneClicked($event, g, row, h)">
@@ -119,10 +119,6 @@
                     <a ng-if="!g['curation'] && !g['prediction']" style="color: black;" ng-click="onGeneClicked($event, g, row, h)">
                         {{g['feature']}}
                     </a>
-                    <section ng-show="g['showModHist']">
-                        <span style="color: red;">Modification record:</span>
-                        <textarea rows="4" cols="20" style="background-color: aqua;">{{g['modHist']}}</textarea>
-                    </section>
                     <br>
                 </span>
             </td>
