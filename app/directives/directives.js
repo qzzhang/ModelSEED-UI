@@ -1443,9 +1443,25 @@ function($compile, $stateParams) {
             scope.treeData = null;
             scope.selected = {};
             scope.promoted = [];
+
+            /** Begin the Subsystem editable spreadsheet */
             scope.headerRowsCollapsed = false;
             scope.showModHist = false;
 
+            // respond when a gene object in a table cell is clicked
+            // ev: triggering event;
+            // i: selected index of the array to be repeated on;
+            // g: gene element in the array for repetition;
+            // r: the row of data in the subsys 'data';
+            // h: the column header of the selected cell
+            scope.onGeneClicked = function(ev, g, r, h) {
+                var gloc = getGeneLocation(r, g, h);
+                scope.getGeneDetails(ev, gloc['row_id'], h.key, gloc['g_row']);
+                ev.stopPropagation();
+                ev.preventDefault();
+            }
+
+            // Toggle the 4 header rows' collapsed/expanded state
             scope.collapseHeaderRows = function() {
                 scope.headerRowsCollapsed = !scope.headerRowsCollapsed;
             }
@@ -1530,6 +1546,34 @@ function($compile, $stateParams) {
                 }
             }
 
+            // context menu open for compartment selection
+            // e: triggering event;
+            // i: selected index of the array to be repeated on;
+            // r: the row of data in the subsys 'data';
+            // h: the column header of the selected cell
+            scope.openComptMenu = function(e, i, r, h) {
+                scope.selectCompt(e, i, r, h);
+            }
+
+            // context menu close
+            scope.closeComptMenu = function(e, h) {
+                scope.selectedCompt = undefined;
+            }
+
+            // parse the data for scope.selectedCompt
+            // e: triggering event;
+            // i: selected index of the array to be repeated on;
+            // r: the row of data in the subsys 'data';
+            // h: the column header of the selected cell
+            scope.selectCompt = function(e, i, r, h) {
+                scope.selectedCompt = {genome: r.Genome, col_key: h.key};
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            /** End the Subsystem editable spreadsheet */
+
+
+            /** Begin the Subsystem family tree rendering*/
             scope.familyTreeSelected = function(ev, treeName, func_name, col_id, usr) {
                 scope.treeData = null;
                 scope.xmldoc = null;
@@ -1881,44 +1925,7 @@ function($compile, $stateParams) {
                 }
                 return xmldoc;
             }
-
-            // context menu open for compartment selection
-            // e: triggering event;
-            // i: selected index of the array to be repeated on;
-            // r: the row of data in the subsys 'data';
-            // h: the column header of the selected cell
-            scope.openComptMenu = function(e, i, r, h) {
-                scope.selectCompt(e, i, r, h);
-            }
-
-            // context menu close
-            scope.closeComptMenu = function(e, h) {
-                scope.selectedCompt = undefined;
-            }
-
-            // parse the data for scope.selectedCompt
-            // e: triggering event;
-            // i: selected index of the array to be repeated on;
-            // r: the row of data in the subsys 'data';
-            // h: the column header of the selected cell
-            scope.selectCompt = function(e, i, r, h) {
-                scope.selectedCompt = {genome: r.Genome, col_key: h.key};
-                e.stopPropagation();
-                e.preventDefault();
-            }
-
-            // respond when a gene object in a table cell is clicked
-            // ev: triggering event;
-            // i: selected index of the array to be repeated on;
-            // g: gene element in the array for repetition;
-            // r: the row of data in the subsys 'data';
-            // h: the column header of the selected cell
-            scope.onGeneClicked = function(ev, g, r, h) {
-                var gloc = getGeneLocation(r, g, h);
-                scope.getGeneDetails(ev, gloc['row_id'], h.key, gloc['g_row']);
-                ev.stopPropagation();
-                ev.preventDefault();
-            }
+            /** End the Subsystem family tree rendering*/
 
             scope.removeSelected = function(ev, src, cand, usr) {
                 var sel_src = document.getElementById(src);
