@@ -88,7 +88,7 @@
                     context-menu="openComptMenu($event, $index, row, h)"
                     context-menu-close="closeComptMenu($event, h)"
                     data-target="dropdown-menu-target-compt"
-                    title="Right click to select and add compartment(s)">
+                    title="Right click to add/remove a compartment">
                     <span ng-if="h.hasOwnProperty('formatter')" bind-html-compile="h.formatter(row[h.key])"></span>
 
                     <span ng-if="!h.hasOwnProperty('formatter') && !h.hasOwnProperty('link')">
@@ -109,16 +109,21 @@
             <td>{{::row[header[0].key]}}</td>
             <td ng-repeat="h in header.slice(1)" style="border: 1px solid black;">
                 <span ng-repeat="g in row[h.key]"
-                    title="Click to annotate or to view details.">
+                    title="Click to annotate gene or to view its details.">
                     <a ng-if="g['curation']" style="color: green;" ng-click="onGeneClicked($event, g, row, h)">
-                        {{g['feature']}}<br>
+                        {{g['feature']}}
                     </a>
                     <a ng-if="g['prediction']" style="color: blue;" ng-click="onGeneClicked($event, g, row, h)">
-                        {{g['feature']}}<br>
+                        {{g['feature']}}
                     </a>
                     <a ng-if="!g['curation'] && !g['prediction']" style="color: black;" ng-click="onGeneClicked($event, g, row, h)">
-                        {{g['feature']}}<br>
+                        {{g['feature']}}
                     </a>
+                    <section ng-show="g['showModHist']">
+                        <span style="color: red;">Modification record:</span>
+                        <textarea rows="4" cols="20" style="background-color: aqua;">{{g['modHist']}}</textarea>
+                    </section>
+                    <br>
                 </span>
             </td>
         </tr>
@@ -131,7 +136,7 @@
             <li ng-repeat="c in compartments">
                 <a role="menuitem" tabindex="1"
                    ng-click="comptSelected($event, c, selectedCompt)">
-                   {{c}}
+                   {{c}} <button><i class="icon-add"></i> / <i class="icon-highlight-remove"></i></button>
                 </a>
             </li>
         </ul>

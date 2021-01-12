@@ -1,16 +1,23 @@
-<md-dialog flex="55">
+<md-dialog flex draggable  id="gene-window" style="{{cssText1}}">
 
-    <md-toolbar>
+    <md-toolbar ng-dblclick="dblclick()" title="Double click to min/maximize gene window">
       <div class="md-toolbar-tools md-toolbar-accent">
-        <h3>{{geneId}}</h3>
+        <h3>{{geneFeature}}</h3>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
-          <md-icon class="material-icons" aria-label="Close dialog">close</md-icon>
+          <md-icon class="material-icons" aria-label="Close window">close</md-icon>
+        </md-button>
+        <md-button class="md-icon-button" ng-show="showGene" ng-click="minimize()">
+            <md-icon class="material-icons" aria-label="Shrink window">minimize</md-icon>
+        </md-button>
+        <md-button class="md-icon-button" ng-show="!showGene" ng-click="maximize()">
+            <md-icon class="material-icons" aria-label="Enlarge window">maximize</md-icon>
         </md-button>
       </div>
     </md-toolbar>
 
-    <md-content layout-margin layout-padding>
+    <md-dialog-content layout-margin layout-padding ng-show="showGene" >
+      <div id="gene-area" style="{{cssText2}}">
         <md-progress-circular ng-if="loading" md-mode="indeterminate"></md-progress-circular>
 
         <!--The annotation level section-->
@@ -49,8 +56,8 @@
             <span class="editable-header">Annotation history</span>
             <table class="popup_table">
                 <tr>
-                    <th>evidence_code</th><th>comment/reason</th><th>curation</th><th>prediction</th>
-                    <th>function</th><th>genes involved</th><th>user</th><th>annotate date</th><th>DOI</th>
+                    <th>evidence_code</th><th>comment/reason</th><th>curation</th><th>prediction</th><th>function</th>
+                    <th>genes involved</th><th>user</th><th>annotate date</th><th>DOI</th><th>Remove record</th>
                 </tr>
                 <tr ng-repeat="mh in mod_history">
                     <td>{{mh.evidence_code}}</td>
@@ -62,15 +69,21 @@
                     <td>{{mh.user}}</td>
                     <td>{{mh.date_annotated}}</td>
                     <td>{{mh.DOI}}</td>
+                    <td>
+                        <button ng-click="rmModHist(mh)" aria-label="delete record">
+                            <i class="icon-highlight-remove"></i>
+                        </button>
+                    </td>
                 </tr>
             </table>
             <br>
         </section>
 
-    </md-content>
+      </div>
+    </md-dialog-content>
 
-    <div class="md-actions">
-        <md-button ng-if="has_gene_anno || has_ec_anno" ng-click="submitChanges()" title="click to submit your changes">
+    <div class="md-actions" ng-show="showGene">
+        <md-button ng-if="has_gene_anno || has_ec_anno || rmedHist" ng-click="submitChanges()" title="click to submit your changes">
             Submit changes
         </md-button>
         <md-button ng-click="cancel()">

@@ -89,6 +89,10 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.validNumber = true;
                 $s.geneannos = ['curation', 'prediction', 'neither'];
 
+                $s.showGene = true;
+                $s.cssText1 = "max-width:1000px;width:90%;height:90%;";
+                $s.cssText2 = "max-width:1000px;width:90%;height:90%;";
+
                 $s.gene = geneObj; // the selected item
                 $s.geneFeature = geneObj['feature'];
                 $s.date_annotated = '';
@@ -107,9 +111,18 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 var evd_codes = geneObj['evidence_codes'] ? geneObj['evidence_codes'] : [];
                 $s.evidence_codes = (evd_codes.length>0) ? evd_codes : [];
                 $s.annotation = geneObj['annotation'] || {};
-                $s.mod_history = $s.annotation['mod_history'] || [];
+                var start_mod_hist = {
+                    "curation": $s.annoOldGroup['curation'],
+                    "prediction": $s.annoOldGroup['prediction'],
+                    "genesInvolved": $s.geneFeature,
+                    "user": Auth.user
+                };
+                $s.mod_history = $s.annotation['mod_history'] || [start_mod_hist];
+                $s.hist_len = $s.mod_history.length;
+
                 $s.has_gene_anno = false;
                 $s.has_ec_anno = false;
+                $s.rmedHist = false;
 
                 $s.addEvdCode = function(ec_id, cm_id, doi_id) {
                     var ec = document.getElementById(ec_id),
@@ -145,6 +158,20 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     }
                     $s.mod_history.push(new_hist);
                     return true;
+                }
+
+                $s.rmModHist = function(mh) {
+                    if (confirm("Remove modification record" + mh +"?")) {
+                        var pos =$s.mod_history.indexOf(mh);
+                        if (pos >= $s.hist_len) {
+                            $s.mod_history.splice(pos, 1);
+                            $s.rmedHist = true;
+                            $s.has_gene_anno = false;
+                            $s.has_ec_anno = false;
+                        } else {
+                            return false;
+                        }
+                    }
                 }
 
                 $s.annoNewGroup = {};
@@ -185,18 +212,28 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         "date_annotated": $s.date_annotated,
                         "DOI": doi1.value
                     };
-                    for (var i=0; i<$s.mod_history.length; i++) {
-                        if ($s.mod_history[i]['curation']==$s.new_anno_hist['curation']
-                            && $s.mod_history[i]['prediction']==$s.new_anno_hist['prediction']
-                            && $s.mod_history[i]['function']==$s.new_anno_hist['function']
-                            && $s.mod_history[i]['comment']==$s.new_anno_hist['comment']
-                            && $s.mod_history[i]['DOI']==$s.new_anno_hist['DOI']
-                            && $s.mod_history[i]['date_annotated']==$s.new_anno_hist['date_annotated']) {
-                            return false;
-                        }
+                    if (findHist($s.new_anno_hist)) {
+                        $s.has_gene_anno = false;
+                        return false;
                     }
                     $s.mod_history.push($s.new_anno_hist);
                     return true;
+                }
+
+                function findHist(new_hist) {
+                    for (var i=0; i<$s.hist_len; i++) {
+                        if ($s.mod_history[i]['curation']==new_hist['curation']
+                            && $s.mod_history[i]['prediction']==new_hist['prediction']
+                            && $s.mod_history[i]['user']==new_hist['user']) {
+                            /*
+                            && $s.mod_history[i]['function']==$s.new_anno_hist['function']
+                            && $s.mod_history[i]['comment']==$s.new_anno_hist['comment']
+                            && $s.mod_history[i]['DOI']==$s.new_anno_hist['DOI']
+                            && $s.mod_history[i]['date_annotated']==$s.new_anno_hist['date_annotated']) {*/
+                            return true;
+                        }
+                    }
+                    return false;
                 }
 
                 $s.submitChanges = function() {
@@ -210,11 +247,15 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         $s.gene['evidence_codes'] = $s.evidence_codes;
                         ec_added = true;
                     }
-                    if ( anno_changed || ec_added) {
+                    if ( $s.rmedHist || anno_changed || ec_added) {
                         $s.gene['annotation']['mod_history'] = $s.mod_history;
                         cb($s.gene);
+
+                        $s.has_gene_anno = false;
+                        $s.has_ec_anno = false;
+                        $s.rmedHist = false;;
                     }
-                    $dialog.hide();
+                    // $dialog.hide();
                 }
 
                 $s.validateNumber = function(text) {
@@ -229,6 +270,24 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.cancel = function(){
                     $dialog.hide();
                 }
+
+                $s.minimize = function() {
+                    $s.cssText1 = "max-width:1000px;";
+                    $s.showGene = false;
+                }
+
+                $s.maximize = function() {
+                    $s.cssText1 = "max-width:1000px;width:80%;height:80%;";
+                    $s.showGene = true;
+                }
+
+                $s.dblclick = function() {
+                    if ($s.showGene)
+                        $s.minimize();
+                    else
+                        $s.maximize();
+                }
+
             }]
         })
     }

@@ -1444,6 +1444,7 @@ function($compile, $stateParams) {
             scope.selected = {};
             scope.promoted = [];
             scope.headerRowsCollapsed = false;
+            scope.showModHist = false;
 
             scope.collapseHeaderRows = function() {
                 scope.headerRowsCollapsed = !scope.headerRowsCollapsed;
@@ -1467,11 +1468,15 @@ function($compile, $stateParams) {
 
                 Dialogs.showGene(ev, gene_data, col_key,
                 function(gene) {
-                    console.log('modified gene object: ', JSON.stringify(gene));
+                    // console.log('modified gene object: ', JSON.stringify(gene));
+                    var mod_hist = JSON.stringify(gene['annotation']['mod_history']);
+                    console.log('modification history: ', mod_hist);
                     gene_data = gene;
                     var tab_cell = scope.data[row_id][col_key];
                     tab_cell[g_row].curation = gene['curation'];
                     tab_cell[g_row].prediction = gene['prediction'];
+                    tab_cell[g_row].showModHist = true;
+                    tab_cell[g_row].modHist = mod_hist;
                     rememberToSave();
                 });
 
@@ -1481,18 +1486,34 @@ function($compile, $stateParams) {
 
             scope.comptSelected = function(ev, comptName, sel_item) {
                 // Add the selected compartment value to the end of the existing localization array
-                alert("Compartment " + comptName + " is selected!");
-                var local_str = scope.data[3][sel_item.col_key], lower_cmpt = comptName.toLowerCase();
+                var addCompt = false, removeCompt = false;
+                var local_str = scope.data[3][sel_item.col_key],
+                    lower_cmpt = comptName.toLowerCase();
                 if (local_str.indexOf(lower_cmpt) >= 0) {
-                    return;
+                    removeCompt = true;
                 }
-                var genome_name = sel_item.genome;
-                var local_arr = local_str.split('<br>');
-                var pos = local_arr.length;
-                local_arr.splice(pos - 1, 0, lower_cmpt);
-                scope.data[3][sel_item.col_key] = local_arr.join('<br>')
-                rememberToSave();
-                updateComptChanges(sel_item.col_key, lower_cmpt);
+                else {
+                    addCompt = true;
+                }
+                var confirm_msg = addCompt? ' Add ' : ' Remove ',
+                    to_from = addCompt? ' to ' : ' from ';
+                confirm_msg += 'compartment "' + comptName + '"' + to_from + 'Localizations?';
+                if (confirm(confirm_msg)) {
+                    var local_arr = local_str.split('<br>'), pos;
+                    if (addCompt) {
+                        pos = local_arr.length;
+                        local_arr.splice(pos - 1, 0, lower_cmpt);
+                        scope.data[3][sel_item.col_key] = local_arr.join('<br>')
+                    } else {
+                        var tmp_arr = local_arr[0].split('>');
+                        local_arr[0] = tmp_arr[1];
+                        pos = local_arr.indexOf(lower_cmpt);
+                        local_arr.splice(pos, 1); // remove 1 item at pos
+                        scope.data[3][sel_item.col_key] = tmp_arr[0] + '>' + local_arr.join('<br>');
+                    }
+                    rememberToSave();
+                    updateComptChanges(sel_item.col_key, lower_cmpt);
+                }
             }
 
             function rememberToSave() {
@@ -1506,16 +1527,6 @@ function($compile, $stateParams) {
                     // Note: row 4 for localization in scope.dataClone while it is row 3 in scope.data
                     //       i.e., row_id=4 unless further changed.
                     updateCloneComptData(4, col_key, compt_name);
-                    scope.dataSaved = false;
-                }
-            }
-
-            function updateDataChanges() {
-                if( scope.dataModified ) {
-                    // adding gn to prediction and removing it from curation in the dataClone json object
-                    updateCloneData(pre_id);
-                    updateCloneData(cur_id);
-                    sortOptions(sel_pre);
                     scope.dataSaved = false;
                 }
             }
@@ -1910,57 +1921,6 @@ function($compile, $stateParams) {
                 ev.preventDefault();
             }
 
-            scope.addSelected = function(ev, cand, dest, usr) {
-                // add selected items in candidates to the destination DOM object dest if the item--
-                // 1) is not in the dest AND 2) is not in the third select (dropdown box)
-                var cell_info = getRowColIds(cand);
-                var row_id = cell_info['row_id'],
-                    col_id = cell_info['col_id'],
-                    cur_id = 'cur_row'+row_id.toString()+'_col'+col_id.toString(),
-                    pre_id = 'pre_row'+row_id.toString()+'_col'+col_id.toString(),
-                    third_id = '';
-
-                if (cur_id == dest) third_id = pre_id;
-                else third_id = cur_id;
-
-                var sel_cand = document.getElementById(cand),
-                    sel_dest = document.getElementById(dest),
-                    sel_3rd = document.getElementById(third_id);
-
-                for (var i = 0; i < sel_cand.options.length; i++) {
-                    if (sel_cand.options[i].selected) {
-                        var sel_val = sel_cand.options[i].value,
-                            sel_text = sel_cand.options[i].text;
-                        var in_dest = false, in_3rd = false;
-                        for (var j1 = 0; j1 < sel_dest.length; j1++) {
-                            if (sel_dest.options[j1].text == sel_text) {
-                                in_dest = true;
-                                break;
-                            }
-                        }
-                        for (var j2 = 0; j2 < sel_3rd.length; j2++) {
-                            if (sel_3rd.options[j2].text == sel_text) {
-                                in_3rd = true;
-                                break;
-                            }
-                        }
-                        if (!in_dest && !in_3rd) {
-                            // create a new option element
-                            var opt = document.createElement('option');
-                            // create text node to add to option element (opt)
-                            opt.appendChild( document.createTextNode(sel_text) );
-                            // set value property of opt
-                            opt.value = sel_val;
-                            // add opt to end of select box (sel)
-                            sel_dest.appendChild(opt);
-                        }
-                    }
-                }
-                updateCloneData(dest);
-                sortOptions(sel_dest);
-                updateOptionColor(cand);
-            }
-
             scope.removeSelected = function(ev, src, cand, usr) {
                 var sel_src = document.getElementById(src);
 
@@ -2032,10 +1992,6 @@ function($compile, $stateParams) {
                 scope.operations.push({op: operation.op, items: operation.items})
             })
 
-            function updateCloneData(something) {
-
-            }
-
             function updateCloneComptData(row_id, col_key, compt_name) {
                 var col_id = getColIdByColKey(col_key);
                 if (col_id == -1) {
@@ -2095,6 +2051,80 @@ function($compile, $stateParams) {
                     }
                 }
                 return {'gene': g_obj, 'row_id': row_id, 'g_row': g_row}
+            }
+
+            scope.add_rxn = function(ev) {
+                alert("Adding a reaction...");
+            }
+
+            scope.add_cpd = function(ev) {
+                alert("Adding a cofactor...");
+            }
+
+            //***** The following functions are not being used in the new subsystem editor design *****
+            scope.addSelected = function(ev, cand, dest, usr) {
+                // add selected items in candidates to the destination DOM object dest if the item--
+                // 1) is not in the dest AND 2) is not in the third select (dropdown box)
+                var cell_info = getRowColIds(cand);
+                var row_id = cell_info['row_id'],
+                    col_id = cell_info['col_id'],
+                    cur_id = 'cur_row'+row_id.toString()+'_col'+col_id.toString(),
+                    pre_id = 'pre_row'+row_id.toString()+'_col'+col_id.toString(),
+                    third_id = '';
+
+                if (cur_id == dest) third_id = pre_id;
+                else third_id = cur_id;
+
+                var sel_cand = document.getElementById(cand),
+                    sel_dest = document.getElementById(dest),
+                    sel_3rd = document.getElementById(third_id);
+
+                for (var i = 0; i < sel_cand.options.length; i++) {
+                    if (sel_cand.options[i].selected) {
+                        var sel_val = sel_cand.options[i].value,
+                            sel_text = sel_cand.options[i].text;
+                        var in_dest = false, in_3rd = false;
+                        for (var j1 = 0; j1 < sel_dest.length; j1++) {
+                            if (sel_dest.options[j1].text == sel_text) {
+                                in_dest = true;
+                                break;
+                            }
+                        }
+                        for (var j2 = 0; j2 < sel_3rd.length; j2++) {
+                            if (sel_3rd.options[j2].text == sel_text) {
+                                in_3rd = true;
+                                break;
+                            }
+                        }
+                        if (!in_dest && !in_3rd) {
+                            // create a new option element
+                            var opt = document.createElement('option');
+                            // create text node to add to option element (opt)
+                            opt.appendChild( document.createTextNode(sel_text) );
+                            // set value property of opt
+                            opt.value = sel_val;
+                            // add opt to end of select box (sel)
+                            sel_dest.appendChild(opt);
+                        }
+                    }
+                }
+                updateCloneData(dest);
+                sortOptions(sel_dest);
+                updateOptionColor(cand);
+            }
+
+            function updateDataChanges() {
+                if( scope.dataModified ) {
+                    // adding gn to prediction and removing it from curation in the dataClone json object
+                    updateCloneData(pre_id);
+                    updateCloneData(cur_id);
+                    sortOptions(sel_pre);
+                    scope.dataSaved = false;
+                }
+            }
+
+            function updateCloneData(something) {
+
             }
 
             function getRowColIds(sel_id) {

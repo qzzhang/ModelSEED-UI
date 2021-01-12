@@ -389,7 +389,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                     lnk_str += catg + '({id: \''+item+'\'})" target="_blank">'+item+'</a><br>';
                 })
             }
-            lnk_str += '</div><button>Add ' + catg + '</button>';
+            lnk_str += '</div><button ng-click="add_' + catg +'($event)">Add ' + catg + '</button>';
             indata[key] = lnk_str;
         }
         return indata;
