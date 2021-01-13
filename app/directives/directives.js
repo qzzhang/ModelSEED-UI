@@ -1574,6 +1574,7 @@ function($compile, $stateParams) {
 
 
             /** Begin the Subsystem family tree rendering*/
+            // This function is called when a family tree/gene combo is chosen
             scope.familyTreeSelected = function(ev, treeName, func_name, col_id, usr) {
                 scope.treeData = null;
                 scope.xmldoc = null;
@@ -3214,7 +3215,7 @@ function(Dialogs, $dialog) {
         //The link function is responsible for registering DOM listeners as well as updating the DOM.
         link: function(scope, elem, attrs) {
             var draggableStr = "draggableModal";
-            var header = angular.element(elem).find('#tree-header');
+            var header = angular.element(elem).find('#win-header');
 
             header.on('mousedown', (mouseDownEvent) => {
             var modalDialog = elem;

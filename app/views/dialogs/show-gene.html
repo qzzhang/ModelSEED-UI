@@ -1,6 +1,6 @@
 <md-dialog flex draggable  id="gene-window" style="{{cssText1}}">
 
-    <md-toolbar ng-dblclick="dblclick()" title="Double click to min/maximize gene window">
+    <md-toolbar id="win-header" ng-dblclick="dblclick()" title="Double click to min/maximize gene window">
       <div class="md-toolbar-tools md-toolbar-accent">
         <h3>{{geneFeature}}</h3>
         <span flex></span>
@@ -87,7 +87,7 @@
             Submit changes
         </md-button>
         <md-button ng-click="cancel()">
-            Cancel
+            Close
         </md-button>
     </div>
 </md-dialog>
