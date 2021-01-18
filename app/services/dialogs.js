@@ -272,7 +272,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 }
 
                 $s.minimize = function() {
-                    $s.cssText1 = "max-width:1000px;";
+                    $s.cssText1 = "position: fixed; bottom: 45px; right: 28px; width: 600px;";
                     $s.showGene = false;
                 }
 
