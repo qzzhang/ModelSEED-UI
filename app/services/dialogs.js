@@ -383,7 +383,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 });
 
                 $s.minimize = function() {
-                    $s.cssText1 = "overflow:hidden;";
+                    $s.cssText1 = "position: fixed; bottom: 45px; right: 28px; width: 800px;";
                     $s.showTree = false;
                 }
 
