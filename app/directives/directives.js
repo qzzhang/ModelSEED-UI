@@ -1450,7 +1450,6 @@ function($compile, $stateParams) {
 
             // respond when a gene object in a table cell is clicked
             // ev: triggering event;
-            // i: selected index of the array to be repeated on;
             // g: gene element in the array for repetition;
             // r: the row of data in the subsys 'data';
             // h: the column header of the selected cell
@@ -1470,15 +1469,17 @@ function($compile, $stateParams) {
             // row_id: selected index of dataClone array to be repeated on;
             // col_key: function role name of the selected column;
             // g_row: index of selected gene element in the array for repetition;
-            //scope.getGeneDetails = function(ev, row_id, col_key, g_row) {
             scope.getGeneDetails = function(ev, row_id, col_key, g_row) {
                 var col_id = getColIdByColKey(col_key);
                 if (col_id == -1) {
                     return;
                 }
-                // Note: Because in scope.dataClone, row 0 data is for Genom/function roles, row 1 for families, row 2 for reactions,
+                // Note: Because in scope.dataClone,
+                //       row 0 data is for Genome/function roles,
+                //       row 1 for families, row 2 for reactions,
                 //       row 3 for cofactors and row 4 for localization,
-                //       while in scope.data header is singled out and row 0 is families.  Therefore, an offset of 1 is added to the row index.
+                //       while in scope.data header is singled out and row 0 is families.
+                //       Therefore, an offset of 1 is added to the row index.
                 var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
                 var gene_data = scope.dataClone[row_id+1][gnm_key][col_id][g_row];
 
@@ -1495,6 +1496,15 @@ function($compile, $stateParams) {
                     rememberToSave();
                 });
 
+                ev.stopPropagation();
+                ev.preventDefault();
+            }
+
+            // respond when an action on a selected gene is clicked
+            // ev: triggering event;
+            // g_obj: object data from selected gene;
+            scope.annotateGene = function(ev, g_obj) {
+                scope.getGeneDetails(ev, g_obj['row_id'], g_obj['col_key'], g_obj['g_row']);
                 ev.stopPropagation();
                 ev.preventDefault();
             }
@@ -1570,12 +1580,56 @@ function($compile, $stateParams) {
                 e.stopPropagation();
                 e.preventDefault();
             }
+
+            // context menu open for compartment selection
+            // e: triggering event;
+            // i: selected index of the array to be repeated on;
+            // r: the row of data in the subsys 'data';
+            // h: the column header of the selected cell
+            // g: the gene selected
+            scope.openGeneMenu = function(e, i, r, h, g) {
+                scope.selectGene(e, i, r, h, g);
+            }
+
+            // context menu close
+            scope.closeGeneMenu = function(e, h, g) {
+                scope.selectedGene = undefined;
+            }
+
+            // parse the data for scope.selectedGene
+            // e: triggering event;
+            // g: gene element in the array for repetition;
+            // r: the row of data in the subsys 'data';
+            // h: the column header of the selected cell
+            // g: the gene selected
+            scope.selectGene = function(e, i, r, h, g) {
+                var gloc = getGeneLocation(r, g, h);
+                scope.selectedGene = {genome: r.Genome, col_key: h.key, gene: g,
+                                      row_id: gloc['row_id'], g_row: gloc['g_row']};
+                e.stopPropagation();
+                e.preventDefault();
+            }
             /** End the Subsystem editable spreadsheet */
 
 
             /** Begin the Subsystem family tree rendering*/
-            // This function is called when a family tree/gene combo is chosen
-            scope.familyTreeSelected = function(ev, treeName, func_name, col_id, usr) {
+            // This function is called when a family tree/curated-gene combo is chosen
+            // ev: triggering event;
+            // g_obj: object data from selected gene;
+            // scope.familyTreeSelected = function(ev, treeName, func_name, col_id, usr) {
+            scope.showGeneFamTree = function(ev, g_obj) {
+                var col_key = g_obj['col_key'];
+                var col_id = getColIdByColKey(col_key);
+                if (col_id == -1) {
+                    return;
+                }
+                var row_id = g_obj['row_id'];
+                var g_row = g_obj['g_row'];
+                var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
+                var func_name = scope.dataClone[0]['Genome'][col_id];
+                var tree_name = scope.dataClone[1]['Families'][col_id][0];
+                var gene_data = scope.dataClone[row_id+1][gnm_key][col_id][g_row];
+
                 scope.treeData = null;
                 scope.xmldoc = null;
                 scope.sXML = '';
@@ -1583,9 +1637,9 @@ function($compile, $stateParams) {
                 scope.errLoadingFamTree = 'Caught an error while loading family tree.';
 
                 if (scope.isDemo == "true")
-                    loadPhyloXML_demo(treeName, func_name, col_id, ev);
+                    loadPhyloXML_demo(tree_name, func_name, col_id, ev);
                 else
-                    loadPhyloXML(treeName, func_name, col_id, ev);
+                    loadPhyloXML(tree_name, func_name, col_id, ev);
 
                 ev.stopPropagation();
                 ev.preventDefault();
@@ -2057,7 +2111,7 @@ function($compile, $stateParams) {
                         break;
                     }
                 }
-                return {'gene': g_obj, 'row_id': row_id, 'g_row': g_row}
+                return {'gene': g_obj, 'row_id': row_id, 'g_row': g_row, 'h_key': hd.key}
             }
 
             scope.add_rxn = function(ev) {

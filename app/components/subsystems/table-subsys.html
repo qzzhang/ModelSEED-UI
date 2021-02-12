@@ -62,12 +62,20 @@
                         {{::h.label.substring(0, 20)}}...
                 </th>
             </tr>
-            <tr><th colspan="100" style="color: black; background-color: rgb(220, 228, 147);">
-                <a ng-click="collapseHeaderRows()">
-                    <span ng-show="!headerRowsCollapsed">(-)Collapse sub-Header Rows</span>
-                    <span ng-show="headerRowsCollapsed">(+)Expand sub-Header Rows</span>
-                </a>
-            </th></tr>
+            <tr>
+                <th style="color: black; background-color: rgb(220, 228, 147);">
+                    <a ng-click="collapseHeaderRows()">
+                        <span ng-show="!headerRowsCollapsed">(-)Collapse</span>
+                        <span ng-show="headerRowsCollapsed">(+)Expand</span>
+                    </a>
+                </th>
+                <th colspan="100" style="color: black; background-color: rgb(220, 228, 147);">
+                    <a>
+                        <span ng-show="!headerRowsCollapsed">(Click '-' to collapse sub-Header Rows)</span>
+                        <span ng-show="headerRowsCollapsed">(Click '+' to expand sub-Header Rows)</span>
+                    </a>
+                </th>
+            </tr>
             <tr ng-repeat="row in data.slice(0,3)" ng-show="!headerRowsCollapsed">
                 <th ng-repeat="h in header" style="color: black; background-color: rgb(220, 228, 147);">
                     <span ng-if="h.hasOwnProperty('formatter')" bind-html-compile="h.formatter(row[h.key])"></span>
@@ -108,9 +116,17 @@
                         | limitTo : opts.limit : opts.offset)">
             <td>{{::row[header[0].key]}}</td>
             <td ng-repeat="h in header.slice(1)" style="border: 1px solid black;">
-                <span ng-repeat="g in row[h.key]" ng-style="g['showModHist']? {'background-color': 'rgb(245, 219, 245)'}: {'background-color': 'white'}"
-                    title="Click to annotate gene or to view its details.">
-                    <a ng-if="g['curation']" style="color: rgb(8, 231, 8);" ng-click="onGeneClicked($event, g, row, h)">
+                <span ng-repeat="g in row[h.key]"
+                      ng-style="g['showModHist']? {'background-color': 'rgb(245, 219, 245)'}: {'background-color': 'white'}"
+                    ng-class="{active: selected.index == $index}"
+                    context-menu="openGeneMenu($event, $index, row, h, g)"
+                    context-menu-close="closeGeneMenu($event, h, g)"
+                    data-target="dropdown-menu-target-gene"
+                      title="Click to annotate gene or to view its details.">
+                    <span ng-if="g['curation']" style="color: rgb(8, 231, 8);">{{g['feature']}}</span>
+                    <span ng-if="g['prediction']" style="color: blue;">{{g['feature']}}</span>
+                    <span ng-if="!g['curation'] && !g['prediction']" style="color: black;">{{g['feature']}}</span>
+                    <!--a ng-if="g['curation']" style="color: rgb(8, 231, 8);" ng-click="onGeneClicked($event, g, row, h)">
                         {{g['feature']}}
                     </a>
                     <a ng-if="g['prediction']" style="color: blue;" ng-click="onGeneClicked($event, g, row, h)">
@@ -118,7 +134,7 @@
                     </a>
                     <a ng-if="!g['curation'] && !g['prediction']" style="color: black;" ng-click="onGeneClicked($event, g, row, h)">
                         {{g['feature']}}
-                    </a>
+                    </a-->
                     <br>
                 </span>
             </td>
@@ -126,7 +142,7 @@
         </tbody>
     </table>
 
-    <!-- right click dropdown context menu -->
+    <!-- right click dropdown context menu for compartment addition/removal-->
     <div class="dropdown position-fixed" id="dropdown-menu-target-compt" style="z-index: 5">
         <ul class="dropdown-menu" role="menu">
             <li ng-repeat="c in compartments">
@@ -135,6 +151,20 @@
                    {{c}} <button><i class="icon-add"></i> / <i class="icon-highlight-remove"></i></button>
                 </a>
             </li>
+        </ul>
+    </div>
+
+    <!-- right click dropdown context menu for gene selection-->
+    <div class="dropdown position-fixed" id="dropdown-menu-target-gene" style="z-index: 5">
+        <ul class="dropdown-menu" role="menu">
+            <li><button role="menuitem" tabindex="1"
+                        ng-click="showGeneFamTree($event, selectedGene)">
+                Show Family Tree
+            </button></li>
+            <li><button role="menuitem" tabindex="1"
+                        ng-click="annotateGene($event, selectedGene)">
+                Annotate Gene
+            </button></li>
         </ul>
     </div>
 
