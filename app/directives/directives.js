@@ -1645,7 +1645,7 @@ function($compile, $stateParams) {
                 ev.preventDefault();
             }
 
-            function fetchDownloadURL(ev, tree_name, func_name, col_id) {
+            function fetchDownloadURL(ev, tree_name, func_name, col_id, ftr_name) {
                 var fpath = '';
                 for (var i=0; i<scope.allFamtrees.length; i++) {
                     if (scope.allFamtrees[i]['treeName'] == tree_name) {
@@ -1663,7 +1663,7 @@ function($compile, $stateParams) {
                         $state.go('app.familyTree', {subsysName:scope.subsysName,roleName:func_name,
                                                      treeName: tree_name, sXML: scope.sXML,
                                                      xmlDownloadURL: scope.downloadURL});*/
-                        Dialogs.showFuncFamTree(ev, func_name, tree_name, scope.downloadURL, scope.xmldoc,
+                        Dialogs.showFuncFamTree(ev, func_name, tree_name, ftr_name, scope.downloadURL, scope.xmldoc,
                             function(selectedGenes) {
                                 if(selectedGenes.length > 0) {
                                     addGenesFromFuncTree(selectedGenes, col_id);
@@ -1714,7 +1714,7 @@ function($compile, $stateParams) {
                         .then(function(xmldoc) {
                             scope.xmldoc = xmldoc;
                             scope.sXML = oSerializer.serializeToString(xmldoc);
-                            fetchDownloadURL(ev, treeName, func_name, col_id);
+                            fetchDownloadURL(ev, treeName, func_name, col_id, gene_data['feature']);
                             ev.stopPropagation();
                             ev.preventDefault();
                             scope.loadingFamTreeFailed = false;
@@ -1769,7 +1769,7 @@ function($compile, $stateParams) {
                             .then(function(xmldoc) {
                                 scope.xmldoc = xmldoc;
                                 scope.sXML = oSerializer.serializeToString(xmldoc);
-                                fetchDownloadURL(ev, treeName, func_name, col_id);
+                                fetchDownloadURL(ev, treeName, func_name, col_id, ftr);
                                 ev.stopPropagation();
                                 ev.preventDefault();
                                 scope.loadingFamTreeFailed = false;
@@ -1883,7 +1883,7 @@ function($compile, $stateParams) {
 
                 var lbl2 = xmldoc.createElement('label', root_node.namespaceURI);
                 var nm2 = xmldoc.createElement('name', root_node.namespaceURI);
-                var txt2 = xmldoc.createTextNode('Annotation');
+                var txt2 = xmldoc.createTextNode(func);
                 nm2.appendChild(txt2);
                 lbl2.appendChild(nm2);
                 var dt2 = xmldoc.createElement('data', root_node.namespaceURI);
@@ -1891,17 +1891,31 @@ function($compile, $stateParams) {
                 // dt2.setAttribute('ref', 'resistance');
                 lbl2.appendChild(dt2);
                 lbl2.setAttribute('type', 'color');
-
                 lbls.appendChild(lbl2);
+
+                // test adding another label
+                var lbl3 = xmldoc.createElement('label', root_node.namespaceURI);
+                var nm3 = xmldoc.createElement('name', root_node.namespaceURI);
+                var txt3 = xmldoc.createTextNode('Annotation');
+                nm3.appendChild(txt3);
+                lbl3.appendChild(nm3);
+                var dt3 = xmldoc.createElement('data', root_node.namespaceURI);
+                dt3.setAttribute('tag', 'colortag');
+                lbl3.appendChild(dt3);
+                lbl3.setAttribute('type', 'color');
+                lbls.appendChild(lbl3);
+
                 root_node.appendChild(lbls);
 
                 return Promise.resolve(xmldoc);
             }
 
             function get_rgb(minimum, maximum, value) {
-                var minimum = parseFloat(minimum),
-                    maximum = parseFloat(maximum),
-                    value = parseFloat(value);
+                if (value <= minimum) {
+                    value = minimum;
+                } else if (value >= maximum) {
+                    value = maximum;
+                }
                 var ratio = 2 * (value - minimum) / (maximum - minimum);
                 r = parseInt(Math.max(0, 255*(1 - ratio)), 10);
                 g = parseInt(Math.max(0, 255*(ratio - 1)), 10);

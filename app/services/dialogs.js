@@ -160,11 +160,13 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     return true;
                 }
 
-                $s.rmModHist = function(mh) {
-                    if (confirm("Remove modification record" + mh +"?")) {
-                        var pos =$s.mod_history.indexOf(mh);
-                        if (pos >= $s.hist_len) {
-                            $s.mod_history.splice(pos, 1);
+                // Not only remove the last change record, but also reverse the change of the annotation
+                $s.rmModHist = function(mh_ind) {
+                    var mh = $s.mod_history[mh_ind];
+                    if (confirm("Remove modification record:\n" + JSON.stringify(mh) +"?")) {
+                        if (mh_ind >= $s.hist_len && mh_ind == $s.mod_history.length - 1) {
+                            $s.mod_history.pop();
+                            $s.resetAnnoSelected($s.mod_history[mh_ind - 1]);
                             $s.rmedHist = true;
                             $s.has_gene_anno = false;
                             $s.has_ec_anno = false;
@@ -185,6 +187,25 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         $s.annoNewGroup = {'curation': 0, 'prediction': 0};
                     }
                     createAnnoChangeHist();
+                }
+
+                $s.resetAnnoSelected = function(hst) {
+                    if ('curation' in hst) {
+                        $s.gene['curation'] = hst['curation'];
+                    }
+                    if ('prediction' in hst) {
+                        $s.gene['prediction'] = hst['prediction'];
+                    }
+                    var x = document.getElementById('annoSelect');
+                    var cur = $s.gene['curation'],
+                        pre = $s.gene['prediction'];
+                    if (cur == 1) {
+                        x.selectedIndex = 0;
+                    } else if (pre == 1) {
+                        x.selectedIndex = 1;
+                    } else {
+                        x.selectedIndex = 2;
+                    }
                 }
 
                 function createAnnoChangeHist() {
@@ -292,7 +313,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
         })
     }
 
-    this.showFuncFamTree = function(ev, func, tree, download_path, phyloxml, cb) {
+    this.showFuncFamTree = function(ev, func, tree, ftr, download_path, phyloxml, cb) {
         var parentEl = angular.element(document.body);
         ev.stopPropagation();
         $dialog.show({
@@ -307,6 +328,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.showTree = true;
                 $s.functionName = func;
                 $s.treeName = tree;
+                $s.featureName = ftr;
                 $s.selectedTreeNodes = [];
                 $s.pinnedNodes = [];
                 $s.tree = {

@@ -59,7 +59,7 @@
                     <th>evidence_code</th><th>comment/reason</th><th>curation</th><th>prediction</th><th>function</th>
                     <th>genes involved</th><th>user</th><th>annotate date</th><th>DOI</th><th>Remove record</th>
                 </tr>
-                <tr ng-repeat="mh in mod_history">
+                <tr ng-repeat="mh in mod_history track by $index">
                     <td>{{mh.evidence_code}}</td>
                     <td>{{mh.comment}}</td>
                     <td>{{mh.curation}}</td>
@@ -70,7 +70,7 @@
                     <td>{{mh.date_annotated}}</td>
                     <td>{{mh.DOI}}</td>
                     <td>
-                        <button ng-click="rmModHist(mh)" aria-label="delete record">
+                        <button ng-if="$index>=hist_len && $index===mod_history.length-1" ng-click="rmModHist($index)" aria-label="delete record">
                             <i class="icon-highlight-remove"></i>
                         </button>
                     </td>
