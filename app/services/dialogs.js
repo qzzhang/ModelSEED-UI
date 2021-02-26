@@ -313,7 +313,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
         })
     }
 
-    this.showFuncFamTree = function(ev, func, tree, ftr, download_path, phyloxml, cb) {
+    this.showFuncFamTree = function(ev, tree, ftr, download_path, phyloxml, cb) {
         var parentEl = angular.element(document.body);
         ev.stopPropagation();
         $dialog.show({
@@ -326,7 +326,6 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
             function($s, $http) {
                 $self = $s;
                 $s.showTree = true;
-                $s.functionName = func;
                 $s.treeName = tree;
                 $s.featureName = ftr;
                 $s.selectedTreeNodes = [];

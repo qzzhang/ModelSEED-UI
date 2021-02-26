@@ -1626,9 +1626,19 @@ function($compile, $stateParams) {
                 var row_id = g_obj['row_id'];
                 var g_row = g_obj['g_row'];
                 var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
-                var func_name = scope.dataClone[0]['Genome'][col_id];
-                var tree_name = scope.dataClone[1]['Families'][col_id][0];
                 var gene_data = scope.dataClone[row_id+1][gnm_key][col_id][g_row];
+
+                var func_names = scope.dataClone[0]['Genome'];
+                var tree_arr = scope.dataClone[1]['Families'];
+                var func_arr = []; //{"col_id": col_id, "func_name": func_names[col_id]}];
+                for (var i = 0; i < tree_arr.length; i++) {
+                    for (var j = 0; j < tree_arr[i].length; j++) {
+                        if (tree_arr[i][j] == tree_arr[col_id][0]) {
+                            func_arr.push({"col_id": i, "func_name": func_names[i]});
+                            break;
+                        }
+                    }
+                }
 
                 scope.treeData = null;
                 scope.xmldoc = null;
@@ -1637,15 +1647,15 @@ function($compile, $stateParams) {
                 scope.errLoadingFamTree = 'Caught an error while loading family tree.';
 
                 if (scope.isDemo == "true")
-                    loadPhyloXML_demo(tree_name, func_name, col_id, ev);
+                    loadPhyloXML_demo(tree_arr[col_id][0], func_name, col_id, ev);
                 else
-                    loadPhyloXML(tree_name, func_name, col_id, gene_data, ev);
+                    loadPhyloXML(tree_arr[col_id][0], func_arr, col_id, gene_data, ev);
 
                 ev.stopPropagation();
                 ev.preventDefault();
             }
 
-            function fetchDownloadURL(ev, tree_name, func_name, col_id, ftr_name) {
+            function fetchDownloadURL(ev, tree_name, func_names, col_id, ftr_name) {
                 var fpath = '';
                 for (var i=0; i<scope.allFamtrees.length; i++) {
                     if (scope.allFamtrees[i]['treeName'] == tree_name) {
@@ -1663,7 +1673,7 @@ function($compile, $stateParams) {
                         $state.go('app.familyTree', {subsysName:scope.subsysName,roleName:func_name,
                                                      treeName: tree_name, sXML: scope.sXML,
                                                      xmlDownloadURL: scope.downloadURL});*/
-                        Dialogs.showFuncFamTree(ev, func_name, tree_name, ftr_name, scope.downloadURL, scope.xmldoc,
+                        Dialogs.showFuncFamTree(ev, tree_name, ftr_name, scope.downloadURL, scope.xmldoc,
                             function(selectedGenes) {
                                 if(selectedGenes.length > 0) {
                                     addGenesFromFuncTree(selectedGenes, col_id);
@@ -1673,7 +1683,7 @@ function($compile, $stateParams) {
                 }
                 else if (scope.isDemo == "true") {
                     scope.downloadURL = '';
-                    Dialogs.showFuncFamTree(ev, func_name, tree_name, scope.downloadURL, scope.xmldoc,
+                    Dialogs.showFuncFamTree(ev, tree_name, scope.downloadURL, scope.xmldoc,
                         function(selectedGenes) {
                             alert(func_name + ' calling back from tree display--' + JSON.stringify(selectedGenes));
                         });
@@ -1682,7 +1692,7 @@ function($compile, $stateParams) {
                 scope.errLoadingFamTree = '';
             }
 
-            function loadPhyloXML(treeName, func_name, col_id, gene_data, ev) {
+            function loadPhyloXML(treeName, funcNM_arr, col_id, gene_data, ev) {
                 // loading the family tree data (in extendable phyloxml format)
                 scope.loadingFamTree = true;
                 var phyloxmlDoc = null;
@@ -1710,11 +1720,11 @@ function($compile, $stateParams) {
                         scope.treeData = phyloxmlDoc;
 
                         var oSerializer = new XMLSerializer();
-                        updateAnnotationInTree(func_name, col_id, gene_data)
+                        updateAnnotationInTree(funcNM_arr, col_id, gene_data)
                         .then(function(xmldoc) {
                             scope.xmldoc = xmldoc;
                             scope.sXML = oSerializer.serializeToString(xmldoc);
-                            fetchDownloadURL(ev, treeName, func_name, col_id, gene_data['feature']);
+                            fetchDownloadURL(ev, treeName, funcNM_arr, col_id, gene_data['feature']);
                             ev.stopPropagation();
                             ev.preventDefault();
                             scope.loadingFamTreeFailed = false;
@@ -1861,10 +1871,10 @@ function($compile, $stateParams) {
             }
 
             // Modify the XML data structure according to the annotations in column (col_id)
-            var updateAnnotationInTree = function(func, col_id, gene_data) {
+            var updateAnnotationInTree = function(func_arr, col_id, gene_data) {
                 // adding score and ortholog matches to the xmldoc
                 var xmldoc = scope.treeData.cloneNode(true);
-                xmldoc = mapAnnotations(xmldoc, 'name', gene_data['orthologs']);
+                xmldoc = mapGeneAnnotations(xmldoc, 'name', gene_data);
 
                 // After all annotations have been updated with new xml nodes added, append the last:
                 var root_node = xmldoc.getElementsByTagName('phyloxml')[0];
@@ -1881,19 +1891,21 @@ function($compile, $stateParams) {
                 lbl1.setAttribute('type', 'text');
                 lbls.appendChild(lbl1);
 
-                var lbl2 = xmldoc.createElement('label', root_node.namespaceURI);
-                var nm2 = xmldoc.createElement('name', root_node.namespaceURI);
-                var txt2 = xmldoc.createTextNode(func);
-                nm2.appendChild(txt2);
-                lbl2.appendChild(nm2);
-                var dt2 = xmldoc.createElement('data', root_node.namespaceURI);
-                dt2.setAttribute('tag', 'colortag');
-                // dt2.setAttribute('ref', 'resistance');
-                lbl2.appendChild(dt2);
-                lbl2.setAttribute('type', 'color');
-                lbls.appendChild(lbl2);
+                func_arr.forEach(function(func) {
+                    var lbl2 = xmldoc.createElement('label', root_node.namespaceURI);
+                    var nm2 = xmldoc.createElement('name', root_node.namespaceURI);
+                    var txt2 = xmldoc.createTextNode(func['func_name']);
+                    nm2.appendChild(txt2);
+                    lbl2.appendChild(nm2);
+                    var dt2 = xmldoc.createElement('data', root_node.namespaceURI);
+                    dt2.setAttribute('tag', 'colortag');
+                    // dt2.setAttribute('ref', 'resistance');
+                    lbl2.appendChild(dt2);
+                    lbl2.setAttribute('type', 'color');
+                    lbls.appendChild(lbl2);
+                });
 
-                // test adding another label
+                /* test adding another label
                 var lbl3 = xmldoc.createElement('label', root_node.namespaceURI);
                 var nm3 = xmldoc.createElement('name', root_node.namespaceURI);
                 var txt3 = xmldoc.createTextNode('Annotation');
@@ -1903,7 +1915,7 @@ function($compile, $stateParams) {
                 dt3.setAttribute('tag', 'colortag');
                 lbl3.appendChild(dt3);
                 lbl3.setAttribute('type', 'color');
-                lbls.appendChild(lbl3);
+                lbls.appendChild(lbl3);*/
 
                 root_node.appendChild(lbls);
 
@@ -1928,17 +1940,18 @@ function($compile, $stateParams) {
             // assign a color to each of the matched tree node with a color range
             // from deep red at 25% to green at 75%, i.e., from rgb(255, 0, 0) to rgb(0, 255, 0)
             // adding the numberical score number beside the color box.
-            function mapAnnotations(xmldoc, tagName, ortho_data) {
+            function mapGeneAnnotations(xmldoc, tagName, gene_data) {
                 // get the `phylogeny` node as the root
                 var tree = xmldoc.firstChild.childNodes[0];
                 var namespc = tree.namespaceURI;
+                var ortho_data = gene_data['orthologs'];
                 if (tree.childElementCount > 0) {
                     var ortho_names = Object.keys(ortho_data);
                     var ortho_scores = Object.values(ortho_data);
                     // tagname (e.g., 'name') is the name of one of the tags/nodes of a 'clade' node
                     var nodes = tree.getElementsByTagName(tagName);
                     for (var i=0; i<nodes.length; i++) {
-                        var  node = nodes[i];
+                        var node = nodes[i];
                         if (node.childNodes.length > 0) {
                             var gene_name = node.innerHTML;
                             if (gene_name.length <= 10) { continue; }
@@ -1946,14 +1959,21 @@ function($compile, $stateParams) {
                             var parnt = node.parentNode;
                             var colr = '', score = 0.0, colorR = 0, colorG = 0, colorB = 0;
                             gene_name = gene_name.split('||')[1];
-                            for (var j=0; j<ortho_names.length; j++) {
-                                var ortho_nm = ortho_names[j].split('||')[1];
-                                if (ortho_nm.indexOf(gene_name) >= 0) { // found ortholog name in tree gene name
-                                    var score = ortho_scores[j] * 100;
-                                    // normalizing the RGB for the range of score (25%~75%)
-                                    [colorR, colorG, colorB] = get_rgb(25, 75, score);
-                                    colr = 'rgb(' + colorR + ',' + colorG + ',' + colorB + ')';
-                                    break;
+                            if (gene_name.indexOf(gene_data['feature']) >= 0) {
+                                //Found self, extremely blue
+                                colr = 'rgb(255, 0, 255)';
+                            } else {
+                                for (var j=0; j<ortho_names.length; j++) {
+                                    var ortho_nm = ortho_names[j].split('||')[1];
+                                    if (ortho_nm.indexOf(gene_name) >= 0) { // found ortholog name in tree gene name
+                                        var score = ortho_scores[j] * 100;
+                                        // Because `sepeciations` can only take nonNegativeInteger values, may use toFixed(2)*100 number
+                                        // var score = Number(ortho_scores[j]).toFixed(2)*100;
+                                        // normalizing the RGB for the range of score (25%~75%)
+                                        [colorR, colorG, colorB] = get_rgb(25, 75, score);
+                                        colr = 'rgb(' + colorR + ',' + colorG + ',' + colorB + ')';
+                                        break;
+                                    }
                                 }
                             }
                             if (colr !== '') {
@@ -1961,14 +1981,17 @@ function($compile, $stateParams) {
                                 var ele10 = xmldoc.createElementNS(namespc, 'speciations');
                                 ele10.appendChild(xmldoc.createTextNode(score.toString()));
                                 ele1.appendChild(ele10);
+
                                 var ele2 = xmldoc.createElementNS(namespc, 'property');
                                 ele2.setAttribute('ref', 'resistance');
                                 ele2.setAttribute('datatype', 'xsd:string');
                                 ele2.setAttribute('applies_to', 'clade');
                                 var txt = xmldoc.createTextNode(colr);
                                 ele2.appendChild(txt);
+
                                 var ele3 = xmldoc.createElementNS(namespc, 'colortag');
                                 ele3.appendChild(txt);
+
                                 parnt.appendChild(ele1);
                                 parnt.appendChild(ele2);
                                 parnt.appendChild(ele3);
