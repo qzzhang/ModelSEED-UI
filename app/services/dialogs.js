@@ -95,18 +95,11 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
 
                 $s.gene = geneObj; // the selected item
                 $s.geneFeature = geneObj['feature'];
+                $s.funcName = col_k;
                 $s.date_annotated = '';
 
                 $s.annoOldGroup = {'curation': geneObj['curation'],
                                    'prediction': geneObj['prediction']};
-
-                if ($s.gene['curation'] == 1) {
-                    $s.selected = 'curation';
-                } else if ($s.gene['prediction'] == 1) {
-                    $s.selected = 'prediction';
-                } else {
-                    $s.selected = 'neither';
-                }
 
                 var evd_codes = geneObj['evidence_codes'] ? geneObj['evidence_codes'] : [];
                 $s.evidence_codes = (evd_codes.length>0) ? evd_codes : [];
@@ -123,6 +116,24 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.has_gene_anno = false;
                 $s.has_ec_anno = false;
                 $s.rmedHist = false;
+
+                function updateSelectedAnno() {
+                    if ($s.gene['curation'] == 1) {
+                        $s.selected = 'curation';
+                    } else if ($s.gene['prediction'] == 1) {
+                        $s.selected = 'prediction';
+                    } else {
+                        $s.selected = 'neither';
+                    }
+                    $s.has_gene_anno = false;
+                }
+
+                function updateLastEvcode(evc_val, cmt_val, doi2_val) {
+                    $s.evc_value = evc_val || 'evidence code';
+                    $s.cmt_value = cmt_val || 'comment';
+                    $s.doi2_value = doi2_val || 'DOI';
+                    $s.has_ec_anno = false;
+                }
 
                 $s.addEvdCode = function(ec_id, cm_id, doi_id) {
                     var ec = document.getElementById(ec_id),
@@ -142,6 +153,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                         "user": Auth.user,
                         "comment": cm.value,
                         "DOI": doi2.value,
+                        "genesInvolved": $s.geneFeature,
                         "date_annotated": ec_date
                     };
                     $s.has_ec_anno = true;
@@ -163,19 +175,28 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 // Not only remove the last change record, but also reverse the change of the annotation
                 $s.rmModHist = function(mh_ind) {
                     var mh = $s.mod_history[mh_ind];
+                    var is_ech = 'evidence_code' in mh;
                     if (confirm("Remove modification record:\n" + JSON.stringify(mh) +"?")) {
                         if (mh_ind >= $s.hist_len && mh_ind == $s.mod_history.length - 1) {
                             $s.mod_history.pop();
-                            $s.resetAnnoSelected($s.mod_history[mh_ind - 1]);
-                            $s.rmedHist = true;
-                            $s.has_gene_anno = false;
-                            $s.has_ec_anno = false;
-                        } else {
+                            if (is_ech) {
+                                $s.evidence_codes.pop();
+                                updateLastEvcode();
+                            } else {
+                                // set the scope values one step back
+                                setAnnoSelected(mh_ind - 1);
+                            }
+                            $s.gene['annotation']['mod_history'] = $s.mod_history;
+                            cb($s.gene);
+                            return true;
+                        }
+                        else {
                             return false;
                         }
                     }
                 }
 
+                updateSelectedAnno();
                 $s.annoNewGroup = {};
                 $s.annoSelectedChanged = function(sel_id) {
                     var x = document.getElementById(sel_id).value;
@@ -189,22 +210,17 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     createAnnoChangeHist();
                 }
 
-                $s.resetAnnoSelected = function(hst) {
-                    if ('curation' in hst) {
+                // set values in the current window display and in the gene for callback
+                function setAnnoSelected(n) {
+                    var hst = $s.mod_history[n];
+                    while ('evidence_code' in hst) {
+                        hst = $s.mod_history[n - 1];
+                        n = n - 1;
+                    }
+                    if ('curation' in hst && 'prediction' in hst) {
                         $s.gene['curation'] = hst['curation'];
-                    }
-                    if ('prediction' in hst) {
                         $s.gene['prediction'] = hst['prediction'];
-                    }
-                    var x = document.getElementById('annoSelect');
-                    var cur = $s.gene['curation'],
-                        pre = $s.gene['prediction'];
-                    if (cur == 1) {
-                        x.selectedIndex = 0;
-                    } else if (pre == 1) {
-                        x.selectedIndex = 1;
-                    } else {
-                        x.selectedIndex = 2;
+                        updateSelectedAnno();
                     }
                 }
 
@@ -270,11 +286,11 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     }
                     if ( $s.rmedHist || anno_changed || ec_added) {
                         $s.gene['annotation']['mod_history'] = $s.mod_history;
-                        cb($s.gene);
 
                         $s.has_gene_anno = false;
                         $s.has_ec_anno = false;
                         $s.rmedHist = false;;
+                        cb($s.gene);
                     }
                     // $dialog.hide();
                 }

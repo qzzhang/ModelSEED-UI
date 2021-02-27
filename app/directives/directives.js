@@ -1485,15 +1485,16 @@ function($compile, $stateParams) {
 
                 Dialogs.showGene(ev, gene_data, col_key,
                 function(gene) {
-                    // console.log('modified gene object: ', JSON.stringify(gene));
-                    var mod_hist = JSON.stringify(gene['annotation']['mod_history']);
-                    console.log('modification history: ', mod_hist);
+                    var mod_hist = gene['annotation']['mod_history'];
+                    // console.log('modification history: ', JSON.stringify(mod_hist));
                     gene_data = gene;
                     var tab_cell = scope.data[row_id][col_key];
                     tab_cell[g_row].curation = gene['curation'];
                     tab_cell[g_row].prediction = gene['prediction'];
-                    tab_cell[g_row].showModHist = true;
-                    rememberToSave();
+                    tab_cell[g_row].showModHist = mod_hist.length > 1;
+                    if (tab_cell[g_row].showModHist) {
+                        rememberToSave();
+                    };
                 });
 
                 ev.stopPropagation();
@@ -1876,7 +1877,8 @@ function($compile, $stateParams) {
                 var xmldoc = scope.treeData.cloneNode(true);
                 xmldoc = mapGeneAnnotations(xmldoc, 'name', gene_data);
 
-                // After all annotations have been updated with new xml nodes added, append the last:
+                // After all annotations have been updated with new xml nodes added,
+                // append the last labels node to the root node--the phyloxml node.
                 var root_node = xmldoc.getElementsByTagName('phyloxml')[0];
                 var lbls = xmldoc.createElement('labels', root_node.namespaceURI);
                 var lbl1 = xmldoc.createElement('label', root_node.namespaceURI);
@@ -1887,6 +1889,7 @@ function($compile, $stateParams) {
                 var dt1 = xmldoc.createElement('data', root_node.namespaceURI);
                 dt1.setAttribute('tag', 'events');
                 dt1.setAttribute('ref', 'speciations');
+                //dt1.setAttribute('ref', 'score');
                 lbl1.appendChild(dt1);
                 lbl1.setAttribute('type', 'text');
                 lbls.appendChild(lbl1);
@@ -1986,9 +1989,8 @@ function($compile, $stateParams) {
                                 ele2.setAttribute('ref', 'resistance');
                                 ele2.setAttribute('datatype', 'xsd:string');
                                 ele2.setAttribute('applies_to', 'clade');
-                                var txt = xmldoc.createTextNode(colr);
-                                ele2.appendChild(txt);
 
+                                var txt = xmldoc.createTextNode(colr);
                                 var ele3 = xmldoc.createElementNS(namespc, 'colortag');
                                 ele3.appendChild(txt);
 

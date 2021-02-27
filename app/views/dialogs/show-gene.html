@@ -2,7 +2,7 @@
 
     <md-toolbar id="win-header" ng-dblclick="dblclick()" title="Double click to min/maximize gene window">
       <div class="md-toolbar-tools md-toolbar-accent">
-        <h3>{{geneFeature}}</h3>
+        <h3>{{geneFeature}}--{{funcName}}</h3>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon class="material-icons" aria-label="Close window">close</md-icon>
@@ -43,9 +43,9 @@
             </div>
             <div>
                 <span class="editable-header">Enter new evidence code:</span><br>
-                <input id="evc" type="text", placeholder='evidence code'></input>
-                <input id="cmt" type="text", placeholder='comment'></input>
-                <input id="doi2" type="text", placeholder='DOI'></input>
+                <input id="evc" type="text", placeholder='evidence code' ng-model="evc_value"></input>
+                <input id="cmt" type="text", placeholder='comment' ng-model="cmt_value"></input>
+                <input id="doi2" type="text", placeholder='DOI' ng-model="doi2_value"></input>
                 <a ng-click="addEvdCode('evc', 'cmt', 'doi2')" class="no-href">Add</a>
             </div>
         </section>
