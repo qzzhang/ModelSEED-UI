@@ -1483,7 +1483,7 @@ function($compile, $stateParams) {
                 var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
                 var gene_data = scope.dataClone[row_id+1][gnm_key][col_id][g_row];
 
-                Dialogs.showGene(ev, gene_data, col_key,
+                Dialogs.showGeneData(ev, gene_data, col_key,
                 function(gene) {
                     var mod_hist = gene['annotation']['mod_history'];
                     // console.log('modification history: ', JSON.stringify(mod_hist));
@@ -1842,8 +1842,8 @@ function($compile, $stateParams) {
 
                 // adding the selected genes with conditions
                 for( var gi=0; gi<genes.length; gi++) {
-                    var gm = genes[gi].split('|_|')[0],  // genome in tree gene string
-                        gn = genes[gi].split('|_|')[1];  // gene in tree gene string
+                    var gm = genes[gi].split('||')[0],  // genome in tree gene string
+                        gn = genes[gi].split('||')[1];  // gene in tree gene string
 
                     if (gn != undefined && gm.indexOf(genome) != -1) {
                         if( (cur_genes && cur_genes.indexOf(gn) != -1) &&
@@ -1851,7 +1851,7 @@ function($compile, $stateParams) {
                             // create a new option element
                             var new_opt = document.createElement('option');
                             // create text node to add to option element (new_opt)
-                            new_opt.appendChild( document.createTextNode(gn) );
+                            new_opt.appendChild(document.createTextNode(gn));
                             // set value property of new_opt with the option's values from candidates
                             for( var k3=0; k3<curs.length; k3++) {
                                 if( curs[k3].text == gn) {
@@ -1956,30 +1956,32 @@ function($compile, $stateParams) {
                     for (var i=0; i<nodes.length; i++) {
                         var node = nodes[i];
                         if (node.childNodes.length > 0) {
+                            var parnt = node.parentNode;
+
                             var gene_name = node.innerHTML;
                             if (gene_name.length <= 10) { continue; }
-
-                            var parnt = node.parentNode;
-                            var colr = '', score = 0.0, colorR = 0, colorG = 0, colorB = 0;
                             gene_name = gene_name.split('||')[1];
+
+                            // setting the color according to the ortholog's score for the selected curated gene
+                            var colr1 = '', score = 0.0;
                             if (gene_name.indexOf(gene_data['feature']) >= 0) {
-                                //Found self, extremely blue
-                                colr = 'rgb(255, 0, 255)';
+                                //Found self, extremely fusha
+                                colr1 = 'rgb(255, 0, 255)';
                             } else {
                                 for (var j=0; j<ortho_names.length; j++) {
                                     var ortho_nm = ortho_names[j].split('||')[1];
                                     if (ortho_nm.indexOf(gene_name) >= 0) { // found ortholog name in tree gene name
-                                        var score = ortho_scores[j] * 100;
+                                        score = ortho_scores[j] * 100;
                                         // Because `sepeciations` can only take nonNegativeInteger values, may use toFixed(2)*100 number
                                         // var score = Number(ortho_scores[j]).toFixed(2)*100;
                                         // normalizing the RGB for the range of score (25%~75%)
-                                        [colorR, colorG, colorB] = get_rgb(25, 75, score);
-                                        colr = 'rgb(' + colorR + ',' + colorG + ',' + colorB + ')';
+                                        var [colorR, colorG, colorB] = get_rgb(25, 75, score);
+                                        colr1 = 'rgb(' + colorR + ',' + colorG + ',' + colorB + ')';
                                         break;
                                     }
                                 }
                             }
-                            if (colr !== '') {
+                            if (colr1 !== '') {
                                 var ele1 = xmldoc.createElementNS(namespc, 'events');
                                 var ele10 = xmldoc.createElementNS(namespc, 'speciations');
                                 ele10.appendChild(xmldoc.createTextNode(score.toString()));
@@ -1990,7 +1992,7 @@ function($compile, $stateParams) {
                                 ele2.setAttribute('datatype', 'xsd:string');
                                 ele2.setAttribute('applies_to', 'clade');
 
-                                var txt = xmldoc.createTextNode(colr);
+                                var txt = xmldoc.createTextNode(colr1);
                                 var ele3 = xmldoc.createElementNS(namespc, 'colortag');
                                 ele3.appendChild(txt);
 
@@ -1998,6 +2000,23 @@ function($compile, $stateParams) {
                                 parnt.appendChild(ele2);
                                 parnt.appendChild(ele3);
                             }
+                            /* adding data for predicted genes by setting color to blue
+                            var colr2 = '', colorR2 = 0, colorG2 = 0, colorB2 = 0;
+                            for (var k1=0; k1<pre_genes; k1++) {
+                                var pre_ortho_names = Object.keys(pre_genes[k1]['orthologs']);
+                                for (var k2=0; k2<ortho_names.length; k2++) {
+                                    var ortho_nm = ortho_names[j].split('||')[1];
+                                    if (ortho_nm.indexOf(gene_name) >= 0) { // found ortholog name in tree gene name
+                                        score = ortho_scores[j] * 100;
+                                        // Because `sepeciations` can only take nonNegativeInteger values, may use toFixed(2)*100 number
+                                        // var score = Number(ortho_scores[j]).toFixed(2)*100;
+                                        // normalizing the RGB for the range of score (25%~75%)
+                                        var [colorR, colorG, colorB] = get_rgb(25, 75, score);
+                                        colr1 = 'rgb(' + colorR + ',' + colorG + ',' + colorB + ')';
+                                        break;
+                                    }
+                                }
+                            }*/
                         }
                     }
                 }

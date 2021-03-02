@@ -77,7 +77,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
         })
     }
 
-    this.showGene = function(ev, geneObj, col_k, cb) {
+    this.showGeneData = function(ev, geneObj, col_k, cb) {
         ev.stopPropagation();
         $dialog.show({
             templateUrl: 'app/views/dialogs/show-gene.html',
@@ -199,15 +199,38 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 updateSelectedAnno();
                 $s.annoNewGroup = {};
                 $s.annoSelectedChanged = function(sel_id) {
-                    var x = document.getElementById(sel_id).value;
-                    if (x.indexOf('curation') >= 0) {
-                        $s.annoNewGroup = {'curation': 1, 'prediction': 0};
-                    } else if (x.indexOf('prediction') >= 0) {
-                        $s.annoNewGroup = {'prediction': 1, 'curation': 0};
+                    var changed = false;
+                    if ($s.selected == 'curation') {
+                        if ($s.gene['curation'] != 1) {
+                            $s.annoNewGroup = {'curation': 1, 'prediction': 0};
+                            changed = true;
+                        }
+                    } else if ($s.selected == 'prediction') {
+                        if ($s.gene['curation'] == 1) {
+                            if (confirm("This gene is already curated, are you sure?")) {
+                                $s.annoNewGroup = {'prediction': 1, 'curation': 0};
+                                changed = true;
+                            }
+                        } else {
+                            $s.annoNewGroup = {'prediction': 1, 'curation': 0};
+                            changed = true;
+                        }
                     } else {
-                        $s.annoNewGroup = {'curation': 0, 'prediction': 0};
+                        if ($s.gene['curation'] == 1) {
+                            if (confirm("This gene is already curated, are you sure?")) {
+                                $s.annoNewGroup = {'prediction': 0, 'curation': 0};
+                                changed = true;
+                            }
+                        } else {
+                            $s.annoNewGroup = {'prediction': 0, 'curation': 0};
+                            changed = true;
+                        }
                     }
-                    createAnnoChangeHist();
+                    if (changed) {
+                        createAnnoChangeHist();
+                    } else { // reverse the selection if no change is to be made
+                        syncSelectedWithGene();
+                    }
                 }
 
                 // set values in the current window display and in the gene for callback
@@ -224,10 +247,14 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                     }
                 }
 
+                function syncSelectedWithGene() {
+                    $s.selected = $s.gene['curation'] ? 'curation' : ($s.gene['prediction'] ? 'prediction' : 'neither');
+                }
                 function createAnnoChangeHist() {
                     if ($s.annoNewGroup['curation'] == $s.annoOldGroup['curation']
                         && $s.annoNewGroup['prediction'] == $s.annoOldGroup['prediction']) {
                             $s.has_gene_anno = false;
+                            syncSelectedWithGene();
                             return;
                     }
                     var anno_date = new Date().toISOString().slice(0, 10);
@@ -438,7 +465,7 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
 
                 var addSelectedNodes = function(nd) {
                     if(!$s.selectedTreeNodes.find(ele => ele.indexOf(nd) >= 0)) {
-                        if( nd.indexOf('|_|') !== -1) {
+                        if( nd.indexOf('||') !== -1) {
                             $s.selectedTreeNodes.push(nd);
                         }
                     }
