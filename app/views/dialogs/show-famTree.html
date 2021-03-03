@@ -290,13 +290,13 @@
                 </button>
             </div>
             <br />
-            <div ng-if="selectedTreeNodes.length>0" class="row" style="background-color: rgba(255, 255, 128, .5);">
+            <div ng-if="pinnedTreeNodes.length>0" class="row" style="background-color: rgba(255, 255, 128, .5);">
                 Selected gene(s):
                 <md-button class="md-primary md-hue-1" ng-click="refreshAnnotation()">
                     Propagate curation
                 </md-button>
                 <select id="sel_genes" multiple=yes size="8">
-                    <option ng-repeat="node in selectedTreeNodes">
+                    <option ng-repeat="node in pinnedTreeNodes">
                         {{node}}
                     </option>
                 </select>

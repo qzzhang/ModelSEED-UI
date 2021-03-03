@@ -1442,7 +1442,7 @@ function($compile, $stateParams) {
             scope.dataSaved = true;
             scope.treeData = null;
             scope.selected = {};
-            scope.promoted = [];
+            scope.propagated = [];
 
             /** Begin the Subsystem editable spreadsheet */
             scope.headerRowsCollapsed = false;
@@ -1677,7 +1677,8 @@ function($compile, $stateParams) {
                         Dialogs.showFuncFamTree(ev, tree_name, ftr_name, scope.downloadURL, scope.xmldoc,
                             function(selectedGenes) {
                                 if(selectedGenes.length > 0) {
-                                    addGenesFromFuncTree(selectedGenes, col_id);
+                                    //addGenesFromFuncTree(selectedGenes, col_id);
+                                    propagate2Curation(selectedGenes);
                                 }
                             });
                     })
@@ -1685,8 +1686,8 @@ function($compile, $stateParams) {
                 else if (scope.isDemo == "true") {
                     scope.downloadURL = '';
                     Dialogs.showFuncFamTree(ev, tree_name, scope.downloadURL, scope.xmldoc,
-                        function(selectedGenes) {
-                            alert(func_name + ' calling back from tree display--' + JSON.stringify(selectedGenes));
+                        function(propagateTreeNodes) {
+                            alert(func_name + ' calling back from tree display--' + JSON.stringify(propagateTreeNodes));
                         });
                 }
                 scope.loadingFamTreeFailed = false;
@@ -1798,6 +1799,66 @@ function($compile, $stateParams) {
                 });
             }
 
+            // get the subsystem data for the genome row with key of gnm_k
+            function findGenomeRow(gnm_k) {
+                var dKeys = Object.keys(scope.dataClone);
+                for (var r=5; r<dKeys.length; r++) { // r=5 skip 4 header rows
+                    if (!(scope.dataClone[r][gnm_k]==undefined)) {
+                        // found the row matching gnm_k and return it
+                        return {row_id: r, row_genes: scope.dataClone[r][gnm_k]};
+                    }
+                }
+                return {};
+            }
+
+            // propagate the selected genes/features in tree_genes to curation=1
+            var propagate2Curation = function(tree_genes) {
+                tree_genes.forEach((gn) => {
+                    var gnm_key, gn_name;
+                    var g_arr = gn.split('||');
+                    gnm_key = g_arr[0].split('_')[0];
+                    gn_name = g_arr[1];
+
+                    var row_info = findGenomeRow(gnm_key);
+                    var row_genes = row_info['row_genes'];
+                    var row_id = row_info['row_id'];
+                    for (var c=1; c<row_genes.length; c++) { // c=1 skip the genome name
+                        var c_arr = row_genes[c];
+                        for (var l=0; l<c_arr.length; l++) {
+                            if (c_arr[l]['feature'] == gn_name) {
+                                // found the tree gene in the genome feature, propagate the feature if it's not yet curated
+                                if (c_arr[l]['curation'] == 0) {
+                                    c_arr[l]['curation'] = 1;
+                                    c_arr[l]['prediction'] = 0;
+                                    // TODO:update the curated genes' table cells by changing the fore/background colors to green/pink
+                                    var col_key = getColKeyByColId(c);
+                                    var tab_cell = scope.data[row_id -1][col_key];
+                                    tab_cell[l].curation = c_arr[l]['curation'];
+                                    tab_cell[l].prediction = c_arr[l]['prediction'];
+                                    tab_cell[l].propagated = 1;
+                                    rememberToSave();
+                                    if (!scope.propagated.find(element => element == gn)) {
+                                        scope.propagated.push(gn);
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    scope.dataModified = scope.propagated.length > 0;
+                })
+                scope.pinnedTreeNodes = [];
+
+                var infomsg = 'None of selected gene(s) has been moved from curation to prediction!';
+                var p_el = angular.element('tree-window');
+                if( scope.dataModified ) {
+                    infomsg = 'Promoted from curation to prediction:\n'+scope.propagated.join(',');
+                    rememberToSave();
+                }
+                console.log(infomsg);
+                Dialogs.showInfo(infomsg, "bottom left", p_el);
+            }
+
             // add the selected input genes to the subsystem data in column numbered col_id
             var addGenesFromFuncTree = function(tree_genes, col_id) {
                 var dKeys = Object.keys(scope.dataClone);
@@ -1817,7 +1878,7 @@ function($compile, $stateParams) {
                 var infomsg = 'None of selected gene(s) has been moved from curation to prediction!';
                 var p_el = angular.element('tree-window');
                 if( scope.dataModified ) {
-                    infomsg = 'Promoted from curation to prediction:\n'+scope.promoted.join(',');
+                    infomsg = 'Promoted from curation to prediction:\n'+scope.propagated.join(',');
                 }
                 console.log(infomsg);
                 Dialogs.showInfo(infomsg, "bottom left", p_el);
@@ -1863,7 +1924,7 @@ function($compile, $stateParams) {
                             }
                             // add new_opt to end of the prediction dropdown
                             sel_pre.appendChild(new_opt);
-                            scope.promoted.push(gn);
+                            scope.propagated.push(gn);
                             scope.dataModified = true;
                         }
                     }
@@ -2130,6 +2191,10 @@ function($compile, $stateParams) {
                 if (i == func_arr.length) {
                     return -1;
                 }
+            }
+
+            function getColKeyByColId(col_id) {
+                return scope.dataClone[0]['Genome'][col_id];
             }
 
             /*

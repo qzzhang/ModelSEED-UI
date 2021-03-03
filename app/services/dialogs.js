@@ -199,34 +199,34 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 updateSelectedAnno();
                 $s.annoNewGroup = {};
                 $s.annoSelectedChanged = function(sel_id) {
-                    var changed = false;
+                    var to_be_changed = false;
                     if ($s.selected == 'curation') {
                         if ($s.gene['curation'] != 1) {
                             $s.annoNewGroup = {'curation': 1, 'prediction': 0};
-                            changed = true;
+                            to_be_changed = true;
                         }
                     } else if ($s.selected == 'prediction') {
                         if ($s.gene['curation'] == 1) {
                             if (confirm("This gene is already curated, are you sure?")) {
                                 $s.annoNewGroup = {'prediction': 1, 'curation': 0};
-                                changed = true;
+                                to_be_changed = true;
                             }
                         } else {
                             $s.annoNewGroup = {'prediction': 1, 'curation': 0};
-                            changed = true;
+                            to_be_changed = true;
                         }
                     } else {
                         if ($s.gene['curation'] == 1) {
                             if (confirm("This gene is already curated, are you sure?")) {
                                 $s.annoNewGroup = {'prediction': 0, 'curation': 0};
-                                changed = true;
+                                to_be_changed = true;
                             }
                         } else {
                             $s.annoNewGroup = {'prediction': 0, 'curation': 0};
-                            changed = true;
+                            to_be_changed = true;
                         }
                     }
-                    if (changed) {
+                    if (to_be_changed) {
                         createAnnoChangeHist();
                     } else { // reverse the selection if no change is to be made
                         syncSelectedWithGene();
@@ -371,7 +371,8 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 $s.showTree = true;
                 $s.treeName = tree;
                 $s.featureName = ftr;
-                $s.selectedTreeNodes = [];
+                $s.pinnedTreeNodes = [];
+                $s.propagateTreeNodes = [];
                 $s.pinnedNodes = [];
                 $s.tree = {
                     branchset: [],
@@ -464,9 +465,9 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 }
 
                 var addSelectedNodes = function(nd) {
-                    if(!$s.selectedTreeNodes.find(ele => ele.indexOf(nd) >= 0)) {
+                    if(!$s.pinnedTreeNodes.find(ele => ele.indexOf(nd) >= 0)) {
                         if( nd.indexOf('||') !== -1) {
-                            $s.selectedTreeNodes.push(nd);
+                            $s.pinnedTreeNodes.push(nd);
                         }
                     }
                 }
@@ -501,9 +502,9 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 }
 
                 $s.$watch('opts.pinnedNodes', function(newValue, oldValue, $s) {
-                    $s.selectedTreeNodes = [];
+                    $s.pinnedTreeNodes = [];
                     if ($s.opts.pinnedNodes) {
-                        // parse for selected tree node names from ids for $s.selectedTreeNodes.toString());
+                        // parse for selected tree node names from ids for $s.pinnedTreeNodes.toString());
                         for (var ni = 0; ni < $s.opts.pinnedNodes.length; ni++) {
                             var t_id = $s.opts.pinnedNodes[ni];
                             searchNameInPhylotreeById(t_id, $s.tree);
@@ -512,7 +513,15 @@ function(MS, WS, $dialog, $mdToast, uiTools, $timeout, Upload, Auth, MV, config,
                 }, true)
 
                 $s.refreshAnnotation = function() {
-                    cb($s.selectedTreeNodes);
+                    $s.propagateTreeNodes = [];
+                    // get a HTMLCollection of elements in the pinnedTreeNodes box
+                    var opt_coll = document.getElementById('sel_genes').options;
+
+                    // convert to an array using Array.from()
+                    Array.from(opt_coll).forEach((coll) => {
+                        if (coll.selected) $s.propagateTreeNodes.push(coll.value.trim());
+                    })
+                    cb($s.propagateTreeNodes);
                 }
 
                 $s.cancel = function() {
