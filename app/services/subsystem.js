@@ -1,12 +1,12 @@
 
 angular.module('SubsystemSvc', [])
-.service('SubsystemSvc', ['$http', '$q', 'config', '$log', 'MS', 'WS',
-function($http, $q, config, $log, MS, WS) {
+.service('SubsystemSvc', ['$http', '$q', 'config', '$log', 'MS', 'WS', 'Auth',
+function($http, $q, config, $log, MS, WS, Auth) {
     "use strict";
     var self = this;
 
     this.listMySubsystems = function() {
-        return MS.listMySubsystems()
+        return MS.listMySubsystems('/'+Auth.user+'/subsystems')
         .then(function(subsys) {
             return subsys;
         }).catch(function(e) {

@@ -157,11 +157,11 @@
     <!-- right click dropdown context menu for gene selection-->
     <div class="dropdown position-fixed" id="dropdown-menu-target-gene" style="z-index: 5">
         <ul class="dropdown-menu" role="menu">
-            <li ng-if="selectedGene['gene']['curation']"><button role="menuitem" tabindex="1"
-                    ng-click="showGeneFamTree($event, selectedGene)">
+            <li ng-if="selectedGene['gene']['curation']"><button role="menuitem"
+                    ng-click="showGeneFamTree($event, selectedGene)" style="white-space: nowrap;">
                 Show Family Tree
-            </button></li>
-            <li><button role="menuitem" tabindex="1"
+            </button</li>
+            <li><button role="menuitem" style="white-space: nowrap;"
                     ng-click="annotateGene($event, selectedGene)">
                 Annotate Gene
             </button></li>

@@ -424,14 +424,15 @@ function($http, $log, $cacheFactory, $q, MV, WS, config, Auth) {
     }
 
     this.mySubsystems = null; //cached subsystem data
-    this.listMySubsystems = function() {
+    this.listMySubsystems = function(path) {
         if (self.mySubsystems != null) {
             var d = $q.defer();
             d.resolve(self.mySubsystems)
             return d.promise;
         }
 
-        var path = '/'+Auth.user+'/subsystems';
+        if (path !== null && path !== undefined && path !== '')
+            path = '/'+Auth.user+'/subsystems';
         return WS.listL(path)
             .then(function(objs) {
                 if (!objs) return [];

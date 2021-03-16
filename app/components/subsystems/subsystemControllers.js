@@ -31,7 +31,7 @@ function($s, WS, MS, Auth, Session, uiTools, Dialogs, $state) {
 
     $s.loadingMySubsystems = true;
 
-    MS.listMySubsystems()
+    MS.listMySubsystems('/'+Auth.user+'/subsystems')
       .then(function(subsys) {
           $s.mySubsystems = subsys;
           $s.loadingMySubsystems = false;
