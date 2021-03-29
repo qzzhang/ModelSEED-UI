@@ -431,7 +431,7 @@ function($http, $log, $cacheFactory, $q, MV, WS, config, Auth) {
             return d.promise;
         }
 
-        if (path !== null && path !== undefined && path !== '')
+        if (path === null || path === undefined || path === '')
             path = '/'+Auth.user+'/subsystems';
         return WS.listL(path)
             .then(function(objs) {

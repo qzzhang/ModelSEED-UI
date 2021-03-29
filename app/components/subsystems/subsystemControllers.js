@@ -241,6 +241,8 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         // 'caption' of the column serving as the key.
         //
         
+        if (obj_data === undefined) return;
+
         // fetching the subsystem head captions (Genome), Families, Reactions, CoFactors and Localizations
         var row_keys = ['Genome', 'Families', 'Reactions', 'Cofactors', 'Localizations'];
         var topRows = [], data = [];
