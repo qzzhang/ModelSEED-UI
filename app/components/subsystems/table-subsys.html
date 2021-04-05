@@ -126,15 +126,6 @@
                     <span ng-if="g['curation']" style="color: rgb(8, 231, 8);">{{g['feature']}}</span>
                     <span ng-if="g['prediction']" style="color: blue;">{{g['feature']}}</span>
                     <span ng-if="!g['curation'] && !g['prediction']" style="color: black;">{{g['feature']}}</span>
-                    <!--a ng-if="g['curation']" style="color: rgb(8, 231, 8);" ng-click="onGeneClicked($event, g, row, h)">
-                        {{g['feature']}}
-                    </a>
-                    <a ng-if="g['prediction']" style="color: blue;" ng-click="onGeneClicked($event, g, row, h)">
-                        {{g['feature']}}
-                    </a>
-                    <a ng-if="!g['curation'] && !g['prediction']" style="color: black;" ng-click="onGeneClicked($event, g, row, h)">
-                        {{g['feature']}}
-                    </a-->
                     <br>
                 </span>
             </td>
@@ -160,7 +151,7 @@
             <li ng-if="selectedGene['gene']['curation']"><button role="menuitem"
                     ng-click="showGeneFamTree($event, selectedGene)" style="white-space: nowrap;">
                 Show Family Tree
-            </button</li>
+            </button></li>
             <li><button role="menuitem" style="white-space: nowrap;"
                     ng-click="annotateGene($event, selectedGene)">
                 Annotate Gene

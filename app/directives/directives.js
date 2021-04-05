@@ -1538,7 +1538,7 @@ function($compile, $stateParams) {
                         scope.data[3][sel_item.col_key] = tmp_arr[0] + '>' + local_arr.join('<br>');
                     }
                     rememberToSave();
-                    updateComptChanges(sel_item.col_key, lower_cmpt);
+                    updateCloneComptData(3, sel_item.col_key, lower_cmpt);
                 }
             }
 
@@ -1547,13 +1547,20 @@ function($compile, $stateParams) {
                 scope.dataSaved = false;
             }
 
-            // update the compartment changes in the clone data
-            function updateComptChanges(col_key, compt_name) {
-                if( scope.dataModified ) {
-                    // Note: row 4 for localization in scope.dataClone while it is row 3 in scope.data
-                    //       i.e., row_id=4 unless further changed.
-                    updateCloneComptData(4, col_key, compt_name);
-                    scope.dataSaved = false;
+            scope.updCofactor = function(ev, col_id) {
+                // Note: row 3 for cofactor in scope.dataClone while it is row 2 in scope.data
+                //       i.e., row_id=2 in scope.data unless further changed.
+                var col_key = getColKeyByColId(col_id);
+                var cf_sel_id = 'sel_' + col_id;
+                var  row_id = 2;
+                var cf_options = document.getElementById(cf_sel_id).options;
+
+                for (var i = 0; i < cf_options.length; ++i) {
+                    if( cf_options[i].selected ) {
+                        console.log("CoFactor " + cf_options[i].value + " is selected!");
+                        updateCloneCoFactorData(row_id, col_key, cf_options[i].value);
+                        rememberToSave();
+                    }
                 }
             }
 
@@ -2156,16 +2163,41 @@ function($compile, $stateParams) {
                 scope.operations.push({op: operation.op, items: operation.items})
             })
 
-            function updateCloneComptData(row_id, col_key, compt_name) {
+            function updateCloneCoFactorData(row_id, col_key, cf_name) {
+                // Note: row 3 for CoFactor in scope.dataClone while it is row 2 in scope.data
+                //       i.e., row_id=2 in scope.data unless further changed.
+                if (row_id != 2 ) {
+                    return;
+                }
                 var col_id = getColIdByColKey(col_key);
                 if (col_id == -1) {
                     return;
                 }
-                // Note: row 3 for localization in scope.dataClone while it is row 4 in scope.data
-                //       i.e., row_id=3 unless further changed.
-                //       gnm_key must be 'Localizations'.
-                var gnm_key = Object.keys(scope.dataClone[row_id])[0];
-                scope.dataClone[row_id][gnm_key][col_id].push(compt_name);
+                // gnm_key must be 'Cofactors'.
+                var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
+                if (gnm_key !== 'Cofactors') {
+                    return;
+                }
+                scope.dataClone[row_id+1][gnm_key][col_id][cf_name] = 1;
+            }
+
+            // update the compartment changes in the clone data
+            function updateCloneComptData(row_id, col_key, compt_name) {
+                // Note: row 4 for localization in scope.dataClone while it is row 3 in scope.data
+                //       i.e., row_id=3 in scope.data unless further changed.
+                if (row_id != 3 ) {
+                    return;
+                }
+                var col_id = getColIdByColKey(col_key);
+                if (col_id == -1) {
+                    return;
+                }
+                // gnm_key must be 'Localizations'.
+                var gnm_key = Object.keys(scope.dataClone[row_id+1])[0];
+                if (gnm_key !== 'Localizations') {
+                    return;
+                }
+                scope.dataClone[row_id+1][gnm_key][col_id].push(compt_name);
             }
 
             function updateCloneAnnoData(row_id, col_key, cell_data, g_row) {

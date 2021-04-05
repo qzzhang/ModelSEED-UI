@@ -170,15 +170,15 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
             $s.listAllSubsysFamTrees = false;
             $s.loading = false;
         })
-        .catch(function(error) {
-            console.log('Caught an error: "' + (error.error.message).replace(/_ERROR_/gi, '') + '"');
+        .catch(function(err) {
+            console.log('Caught an error: "' + (err.error.message).replace(/_ERROR_/gi, '') + '"');
             $s.listAllSubsysFamTrees = false;
             $s.loading = false;
         });
     }
 
     $s.save = function(data) {
-        var data_obj = {"name": $s.subsysName, "data": data};
+        var data_obj = {"data": {"subsystem_name": $s.subsysName, "subsystem_data": data}};
         return WS.save(wsPath, data_obj, {overwrite: true, userMeta: {}, type: 'unspecified'})
             .then(function() {
                 $s.subsysDataClone = Object.assign({}, data);
@@ -194,10 +194,10 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         var folder = '/'+Auth.user+'/subsystems/';
         // Rename not only the subsystem file, but also the subsystem name to newName
         // (not $s.subsysName any more)
-        data = {"name": newName, "data": data};
-        return WS.save(folder+newName, data, {userMeta: {}, overwrite: true, type: 'unspecified'})
+        var data_obj = {"data": {"subsystem_name": newName, "subsystem_data": data}};
+        return WS.save(folder+newName, data_obj, {overwrite: true, userMeta: {}, type: 'unspecified'})
             .then(function(res) {
-                Dialogs.showComplete('Saved subsystem data to ', newName);
+                Dialogs.showComplete('Saved subsystem data as ', newName);
                 $state.go('app.subsystem', {path: folder+newName});
             }).catch(function(e) {
                 console.log('error', e)
@@ -240,8 +240,6 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         // 'candidates'
         // 'caption' of the column serving as the key.
         //
-        
-        if (obj_data === undefined) return;
 
         // fetching the subsystem head captions (Genome), Families, Reactions, CoFactors and Localizations
         var row_keys = ['Genome', 'Families', 'Reactions', 'Cofactors', 'Localizations'];
@@ -253,7 +251,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         var families = reduceArr($s.topRows[0], $s.topRows[1]);
         data[0] = families;
         data[1] = reduceArr($s.topRows[0], $s.topRows[2]); 
-        data[2] = reduceArr($s.topRows[0], $s.topRows[3]); 
+        data[2] = reduceArr($s.topRows[0], $s.topRows[3]);
         data[3] = reduceArr($s.topRows[0], $s.topRows[4]); 
 
         // fetching the annotation details, in rows
@@ -267,6 +265,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         $s.captions = $s.topRows[0];
         $s.subsysData = data;
         $s.mySubsysFamTrees = families;
+        return true;
     }
 
     // combine two separate arrays into key value pairs by using array's reduce function
@@ -296,9 +295,9 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
             }
         3rd row:
             input_data[1]= {Genome: "Cofactors"
-                "UDP-4-dehydro-6-deoxy-glucose 3,5-epimerase (no EC)": ["cpd00034","cpd10515","cpd10516"],
-                "UDP-4-dehydro-rhamnose reductase (EC 1.1.1.-)": ["cpd00034","cpd10515","cpd10516"],
-                "UDP-glucose 4,6-dehydratase (EC 4.2.1.76)": [...],...
+                "UDP-4-dehydro-6-deoxy-glucose 3,5-epimerase (no EC)": {"cpd00034:0":0,"cpd10515:0":0,"cpd10516:0":0},
+                "UDP-4-dehydro-rhamnose reductase (EC 1.1.1.-)": {"cpd00034:0":0,"cpd10515:0":0,"cpd10516:0":0},
+                "UDP-glucose 4,6-dehydratase (EC 4.2.1.76)": {...},...
             }
         4th row:
             input_data[1]= {Genome: "Localizations"
@@ -321,8 +320,8 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         var curation_scores = [], prediction_scores = [], candidate_scores = [];
         var candidates = [];
         input_data[0] = famTreeRow(input_data[0]);  // famTreeRow
-        input_data[1] = rxn_cofaRow(input_data[1], 'rxn');  // rxnRow
-        input_data[2] = rxn_cofaRow(input_data[2], 'cpd');  // cofaRow
+        input_data[1] = rxnRow(input_data[1], 'rxn');  // rxnRow
+        input_data[2] = cofaRow(input_data[2], 'cpd');  // cofaRow
         input_data[3] = compartmentRow(input_data[3]);  // localRow
 
         // skip masking the first 4 (families/reaction/cofactor/localization rows
@@ -350,6 +349,9 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
 
     function famTreeRow(indata) {
         // re-write the family tree row by adding the protein families to a radio buttun list
+        if (indata == undefined) {
+            return;
+        }
         var key_arr = Object.keys(indata);
         for (var k = 1; k<key_arr.length; k++) {
             var key = key_arr[k],
@@ -375,30 +377,77 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         return indata;
     }
 
-    function rxn_cofaRow(indata, catg) {
-        // re-write the reaction/cofactors rows by adding the anchor links and allowing blank rxns
+    function rxnRow(indata) {
+        // re-write the reaction rows by adding the anchor links and allowing blank rxns
+        if (indata == undefined) {
+            return;
+        }
         var key_arr = Object.keys(indata);
         for (var k = 1; k<key_arr.length; k++) {
-            var key = key_arr[k],
-                val = indata[key];
+            var rxnkey = key_arr[k],
+                val = indata[rxnkey];
             var lnk_str ='<div style="border:1px solid black; width: 120px;">'; 
             if (val && val.length > 0) {
                 if (!Array.isArray(val)) {
                     val = val.split(',');
                 }
                 val.forEach(function(item, index) {
-                    lnk_str += '<a ui-sref="app.';
-                    lnk_str += catg + '({id: \''+item+'\'})" target="_blank">'+item+'</a><br>';
+                    lnk_str += '<a ui-sref="app.rxn';
+                    lnk_str += '({id: \''+item+'\'})" target="_blank">'+item+'</a><br>';
                 })
             }
-            lnk_str += '</div><button ng-click="add_' + catg +'($event)">Add ' + catg + '</button>';
-            indata[key] = lnk_str;
+            lnk_str += '</div>'; //<button ng-click="add_rxn($event)">Add rxn</button>';
+            indata[rxnkey] = lnk_str;
+        }
+        return indata;
+    }
+
+    function cofaRow(indata) {
+        // re-write the cofactors rows
+        if (indata == undefined) {
+            return;
+        }
+        var key_arr = Object.keys(indata);
+        for (var k = 1; k<key_arr.length; k++) {
+            var cfkey = key_arr[k],
+                val = indata[cfkey];
+            //var kid = getColIdFromColKey(cfkey);
+            // create a dropdown holding all the cofactors
+            var drp_str = '<div>Select cofactor(s)<select id="sel_'+k+'" style="width:120px;" multiple=yes size=3';
+            //var drp_str = '<select id="sel_'+cfkey+'" style="width:120px;" multiple=yes size=4';
+            drp_str += ' ng-click="updCofactor($event, \'' +k+'\')">';
+            //drp_str += '<option>Select cofactor(s)</option>';
+            /*if (val && Array.isArray(val)) {
+                var val_obj = {};
+                val.forEach(function(item, index) {
+                    var cpd = item;
+                    drp_str += '<option value="' + cpd + '"';
+                    drp_str += '>' + cpd + '</option>';
+                    val_obj[cpd] = 0;
+                })
+                val = val_obj;
+            } else if (val && !Array.isArray(val)) {*/
+            var cpds = Object.keys(val);
+            for (var k1 = 0; k1 < cpds.length; k1++) {
+                var cpd = cpds[k1];
+                drp_str += '<option value="' + cpd + '"';
+                if (val[cpd]) {
+                    drp_str += ' selected';
+                }
+                drp_str += '>' + cpd + '</option>';
+            }
+            //}
+            indata[cfkey] = drp_str + '</select></div>';
+            //indata[cfkey] = drp_str + '</select>';
         }
         return indata;
     }
 
     function compartmentRow(indata) {
         // re-write the compartment row
+        if (indata == undefined) {
+            return;
+        }
         var key_arr = Object.keys(indata);
         for (var k = 1; k<key_arr.length; k++) {
             var key = key_arr[k],
@@ -493,6 +542,17 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         return save_cancel_str;
     }
 
+    /*function getColIdFromColKey(col_k) {
+        var func_arr = $s.subsysDataClone[0]['Genome'];
+        for (var i=0; i<func_arr.length; i++) {
+            if (func_arr[i] === col_k) {
+                return i;
+            }
+        }
+        if (i == func_arr.length) {
+            return -1;
+        }
+    }*/
 }])
 // End Subsystem controller
 
