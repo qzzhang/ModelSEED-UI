@@ -1556,12 +1556,9 @@ function($compile, $stateParams) {
                 var cf_options = document.getElementById(cf_sel_id).options;
 
                 for (var i = 0; i < cf_options.length; ++i) {
-                    if( cf_options[i].selected ) {
-                        console.log("CoFactor " + cf_options[i].value + " is selected!");
-                        updateCloneCoFactorData(row_id, col_key, cf_options[i].value);
-                        rememberToSave();
-                    }
+                    updateCloneCoFactorData(row_id, col_key, cf_options[i].value, cf_options[i].selected);
                 }
+                rememberToSave();
             }
 
             // context menu open for compartment selection
@@ -2163,7 +2160,7 @@ function($compile, $stateParams) {
                 scope.operations.push({op: operation.op, items: operation.items})
             })
 
-            function updateCloneCoFactorData(row_id, col_key, cf_name) {
+            function updateCloneCoFactorData(row_id, col_key, cf_name, isSelected) {
                 // Note: row 3 for CoFactor in scope.dataClone while it is row 2 in scope.data
                 //       i.e., row_id=2 in scope.data unless further changed.
                 if (row_id != 2 ) {
@@ -2178,7 +2175,7 @@ function($compile, $stateParams) {
                 if (gnm_key !== 'Cofactors') {
                     return;
                 }
-                scope.dataClone[row_id+1][gnm_key][col_id][cf_name] = 1;
+                scope.dataClone[row_id+1][gnm_key][col_id][cf_name] = isSelected ? 1 : 0;
             }
 
             // update the compartment changes in the clone data

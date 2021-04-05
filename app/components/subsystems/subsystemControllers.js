@@ -139,7 +139,8 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
             $s.subsysMeta = res.meta;
 
             // unmasked data
-            $s.subsysDataClone = Object.assign({}, res_data.subsystem_data);
+            var subsysObjData = Object.assign({}, res_data.subsystem_data);
+            $s.subsysDataClone = JSON.parse(JSON.stringify(subsysObjData));
             WS.cached.subsystemClone = $s.subsysDataClone;
 
             // html-masked data
@@ -182,7 +183,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         return WS.save(wsPath, data_obj, {overwrite: true, userMeta: {}, type: 'unspecified'})
             .then(function() {
                 $s.subsysDataClone = Object.assign({}, data);
-                Dialogs.showComplete('Saved subsystems', $s.subsysName);
+                Dialogs.showComplete('Saving subsystems', $s.subsysName);
                 $state.go('app.subsystem', wsPath);
             }).catch(function(e) {
                 console.log('error', e)
@@ -197,7 +198,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         var data_obj = {"data": {"subsystem_name": newName, "subsystem_data": data}};
         return WS.save(folder+newName, data_obj, {overwrite: true, userMeta: {}, type: 'unspecified'})
             .then(function(res) {
-                Dialogs.showComplete('Saved subsystem data as ', newName);
+                Dialogs.showComplete('Saving subsystem data as ', newName);
                 $state.go('app.subsystem', {path: folder+newName});
             }).catch(function(e) {
                 console.log('error', e)
@@ -243,7 +244,8 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
 
         // fetching the subsystem head captions (Genome), Families, Reactions, CoFactors and Localizations
         var row_keys = ['Genome', 'Families', 'Reactions', 'Cofactors', 'Localizations'];
-        var topRows = [], data = [];
+        var data = [];
+        $s.topRows = [];
         for (var i0=0; i0<row_keys.length; i0++) {
             $s.topRows.push(obj_data[i0][row_keys[i0]]);
             $s.topRows[i0].unshift(row_keys[i0]);
@@ -411,22 +413,11 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         for (var k = 1; k<key_arr.length; k++) {
             var cfkey = key_arr[k],
                 val = indata[cfkey];
-            //var kid = getColIdFromColKey(cfkey);
             // create a dropdown holding all the cofactors
             var drp_str = '<div>Select cofactor(s)<select id="sel_'+k+'" style="width:120px;" multiple=yes size=3';
             //var drp_str = '<select id="sel_'+cfkey+'" style="width:120px;" multiple=yes size=4';
             drp_str += ' ng-click="updCofactor($event, \'' +k+'\')">';
             //drp_str += '<option>Select cofactor(s)</option>';
-            /*if (val && Array.isArray(val)) {
-                var val_obj = {};
-                val.forEach(function(item, index) {
-                    var cpd = item;
-                    drp_str += '<option value="' + cpd + '"';
-                    drp_str += '>' + cpd + '</option>';
-                    val_obj[cpd] = 0;
-                })
-                val = val_obj;
-            } else if (val && !Array.isArray(val)) {*/
             var cpds = Object.keys(val);
             for (var k1 = 0; k1 < cpds.length; k1++) {
                 var cpd = cpds[k1];
@@ -541,18 +532,6 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         save_cancel_str += '</div></section>';
         return save_cancel_str;
     }
-
-    /*function getColIdFromColKey(col_k) {
-        var func_arr = $s.subsysDataClone[0]['Genome'];
-        for (var i=0; i<func_arr.length; i++) {
-            if (func_arr[i] === col_k) {
-                return i;
-            }
-        }
-        if (i == func_arr.length) {
-            return -1;
-        }
-    }*/
 }])
 // End Subsystem controller
 
