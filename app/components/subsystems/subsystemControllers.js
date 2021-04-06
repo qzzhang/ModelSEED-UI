@@ -414,10 +414,9 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
             var cfkey = key_arr[k],
                 val = indata[cfkey];
             // create a dropdown holding all the cofactors
-            var drp_str = '<div>Select cofactor(s)<select id="sel_'+k+'" style="width:120px;" multiple=yes size=3';
-            //var drp_str = '<select id="sel_'+cfkey+'" style="width:120px;" multiple=yes size=4';
+            var drp_str = '<select id="sel_'+k+'" style="width:120px;" multiple=yes size=4';
             drp_str += ' ng-click="updCofactor($event, \'' +k+'\')">';
-            //drp_str += '<option>Select cofactor(s)</option>';
+            drp_str += '<option>Select cpd(s)</option>';
             var cpds = Object.keys(val);
             for (var k1 = 0; k1 < cpds.length; k1++) {
                 var cpd = cpds[k1];
@@ -427,9 +426,7 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
                 }
                 drp_str += '>' + cpd + '</option>';
             }
-            //}
-            indata[cfkey] = drp_str + '</select></div>';
-            //indata[cfkey] = drp_str + '</select>';
+            indata[cfkey] = drp_str + '</select>';
         }
         return indata;
     }

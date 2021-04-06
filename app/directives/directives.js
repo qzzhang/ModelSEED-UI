@@ -2163,6 +2163,9 @@ function($compile, $stateParams) {
             function updateCloneCoFactorData(row_id, col_key, cf_name, isSelected) {
                 // Note: row 3 for CoFactor in scope.dataClone while it is row 2 in scope.data
                 //       i.e., row_id=2 in scope.data unless further changed.
+                if (cf_name == "Select cpd(s)") {
+                    return;
+                }
                 if (row_id != 2 ) {
                     return;
                 }
