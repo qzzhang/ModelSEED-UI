@@ -152,6 +152,10 @@ function($locationProvider, $stateProvider, $httpProvider,
             url: "/version",
             templateUrl: 'app/views/version.html',
             controller: 'Version'
+        }).state('main.about.changelogs', {
+            url: "/changelogs",
+            templateUrl: 'app/views/changelogs.html',
+            controller: 'ChangeLogs'
         }).state('main.about.faq', {
             url: "/faq",
             templateUrl: 'app/views/docs/faq.html',

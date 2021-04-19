@@ -157,3 +157,14 @@ body {
         -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
     }
 }
+
+/*select option[selected] {
+    background-color: rgba(202, 28, 0, 0.3);
+}*/
+select option:not(:checked) {
+    color: white;
+    background: turquoise repeat;
+}
+select option:hover {
+    background-color: rgb(8, 228, 37);
+}

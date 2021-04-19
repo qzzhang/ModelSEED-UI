@@ -322,8 +322,8 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         var curation_scores = [], prediction_scores = [], candidate_scores = [];
         var candidates = [];
         input_data[0] = famTreeRow(input_data[0]);  // famTreeRow
-        input_data[1] = rxnRow(input_data[1], 'rxn');  // rxnRow
-        input_data[2] = cofaRow(input_data[2], 'cpd');  // cofaRow
+        input_data[1] = rxnRow(input_data[1]);  // rxnRow
+        input_data[2] = cofaRow(input_data[2]);  // cofaRow
         input_data[3] = compartmentRow(input_data[3]);  // localRow
 
         // skip masking the first 4 (families/reaction/cofactor/localization rows
@@ -412,10 +412,11 @@ function($s, $state, WS, MS, $stateParams, tools, Dialogs, $http, Auth) {
         var key_arr = Object.keys(indata);
         for (var k = 1; k<key_arr.length; k++) {
             var cfkey = key_arr[k],
-                val = indata[cfkey];
+                val = indata[cfkey],
+                col_id = k - 1;
             // create a dropdown holding all the cofactors
-            var drp_str = '<select id="sel_'+k+'" style="width:120px;" multiple=yes size=4';
-            drp_str += ' ng-click="updCofactor($event, \'' +k+'\')">';
+            var drp_str = '<select id="sel_'+col_id+'" style="width:120px;" multiple="multiple" size=4';
+            drp_str += ' ng-click="updCofactor($event, \'' +col_id+'\')">';
             drp_str += '<option>Select cpd(s)</option>';
             var cpds = Object.keys(val);
             for (var k1 = 0; k1 < cpds.length; k1++) {

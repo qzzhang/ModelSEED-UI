@@ -88,8 +88,6 @@ function($scope, $stateParams, $mdSidenav) {
 }])
 
 
-
-
 .controller('Home', ['$scope', '$stateParams',
 function($scope, $stateParams) {
 
@@ -157,6 +155,16 @@ function($s, $http, config, $rootScope) {
          }).then(function(res) { $s.patricAuth = true; })
            .catch(function() { $s.patricAuth = false; })
     */
+
+}])
+
+.controller('ChangeLogs', ['$scope', '$http', 'config', '$rootScope',
+function($s, $http, config, $rootScope) {
+
+    $http.get('https://github.com/ModelSEED/ModelSEEDTemplates/blob/main/Plant_CHANGELOG.md')
+         .then(function(res) {
+             $s.plant_changelog = res.data.trim();
+         })
 
 
 }])

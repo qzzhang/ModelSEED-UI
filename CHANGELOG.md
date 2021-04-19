@@ -1,4 +1,4 @@
-##Change Log
+##Change Logs
 
 Below contains a summary of notable changes and deploy date for each release.
 ####v2.6.1 (July 31, 2020)

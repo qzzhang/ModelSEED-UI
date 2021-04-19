@@ -1447,7 +1447,6 @@ function($compile, $stateParams) {
             /** Begin the Subsystem editable spreadsheet */
             scope.headerRowsCollapsed = false;
             scope.showModHist = false;
-
             // respond when a gene object in a table cell is clicked
             // ev: triggering event;
             // g: gene element in the array for repetition;
@@ -2159,6 +2158,27 @@ function($compile, $stateParams) {
             scope.$on('Events.commandOperation', function(e, operation) {
                 scope.operations.push({op: operation.op, items: operation.items})
             })
+
+            function setDropdownColor(sel) {
+                var sel_options = sel.options;
+                for (var i =0; i < sel_options.lengty; i++) {
+                    if(sel_options[i].selected) {
+                        sel_options[i].style.background = "green";
+                    }
+                }
+            }
+
+            scope.updateCoFactorDisplay = function() {
+                // Note: row 3 for CoFactor in scope.dataClone while it is row 2 in scope.data
+                //       i.e., row_id=2 in scope.data unless further changed.
+                var col_keys = Object.keys(scope.data[2]); // get the cofactor data elements
+                var col_cnt = col_keys.length;
+                for (var i = 0; i < col_keys.length; i++) {
+                    var sel_id = 'sel_' + i;
+                    var sel = document.getElementById(sel_id);
+                    setDropdownColor(sel);
+                }
+            }
 
             function updateCloneCoFactorData(row_id, col_key, cf_name, isSelected) {
                 // Note: row 3 for CoFactor in scope.dataClone while it is row 2 in scope.data
