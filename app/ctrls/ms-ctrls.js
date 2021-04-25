@@ -158,15 +158,34 @@ function($s, $http, config, $rootScope) {
 
 }])
 
-.controller('ChangeLogs', ['$scope', '$http', 'config', '$rootScope',
+.controller('Templates', ['$scope', '$http', 'config', '$rootScope',
 function($s, $http, config, $rootScope) {
+    var converter = new showdown.Converter();
 
+    //$http.get('https://raw.githubusercontent.com/ModelSEED/ModelSEEDTemplates/main/Core_CHANGELOG.md')
+    $http.get('https://github.com/ModelSEED/ModelSEEDTemplates/blob/main/Core_CHANGELOG.md')
+         .then(function(res) {
+            var core_text = res.data.trim();
+            $s.core_changelog = converter.makeHtml(core_text);
+         })
+    //$http.get('https://raw.githubusercontent.com/ModelSEED/ModelSEEDTemplates/main/Plant_CHANGELOG.md')
     $http.get('https://github.com/ModelSEED/ModelSEEDTemplates/blob/main/Plant_CHANGELOG.md')
          .then(function(res) {
-             $s.plant_changelog = res.data.trim();
+            var plant_text = res.data.trim();
+            $s.plant_changelog = converter.makeHtml(plant_text);
          })
-
-
+    //$http.get('https://raw.githubusercontent.com/ModelSEED/ModelSEEDTemplates/main/GramPositive_CHANGELOG')
+    $http.get('https://github.com/ModelSEED/ModelSEEDTemplates/blob/main/GramPositive_CHANGELOG.md')
+         .then(function(res) {
+            var gp_text = res.data.trim();
+            $s.gramPositive_changelog = converter.makeHtml(gp_text);
+         })
+    //$http.get('https://raw.githubusercontent.com/ModelSEED/ModelSEEDTemplates/main/GramNegative_CHANGELOG')
+    $http.get('https://github.com/ModelSEED/ModelSEEDTemplates/blob/main/GramNegative_CHANGELOG.md')
+         .then(function(res) {
+            var gn_text = res.data.trim();
+            $s.gramNegative_changelog = converter.makeHtml(gn_text);
+         })
 }])
 
 
