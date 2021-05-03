@@ -1546,6 +1546,12 @@ function($compile, $stateParams) {
                 scope.dataSaved = false;
             }
 
+            function rememberSaved() {
+                scope.saveInProgress = false;
+                scope.dataModified = false;
+                scope.dataSaved = true;
+            }
+
             scope.updCofactor = function(ev, col_id) {
                 // Note: row 3 for cofactor in scope.dataClone while it is row 2 in scope.data
                 //       i.e., row_id=2 in scope.data unless further changed.
@@ -1679,7 +1685,9 @@ function($compile, $stateParams) {
                                                      xmlDownloadURL: scope.downloadURL});*/
                         Dialogs.showFuncFamTree(ev, tree_name, ftr_name, scope.downloadURL, scope.xmldoc,
                             function(selectedGenes) {
-                                if(selectedGenes.length > 0) {
+                                if(selectedGenes.length === 0) {
+                                    Dialogs.showError('You must select one or more genes!');
+                                } else {
                                     //addGenesFromFuncTree(selectedGenes, col_id);
                                     propagate2Prediction(selectedGenes);
                                 }
@@ -1816,6 +1824,7 @@ function($compile, $stateParams) {
 
             // propagate the selected genes/features in tree_genes to prediction=1 (NOT curation=1)
             var propagate2Prediction = function(tree_genes) {
+                var batch_gns = [];
                 tree_genes.forEach((gn) => {
                     var gnm_key, gn_name;
                     var g_arr = gn.split('||');
@@ -1839,6 +1848,7 @@ function($compile, $stateParams) {
                                     tab_cell[l].curation = c_arr[l]['curation'];
                                     tab_cell[l].prediction = c_arr[l]['prediction'];
                                     tab_cell[l].propagated = 1;
+                                    batch_gns.push(gn);
                                     rememberToSave();
                                     if (!scope.propagated.find(element => element == gn)) {
                                         scope.propagated.push(gn);
@@ -1848,17 +1858,16 @@ function($compile, $stateParams) {
                             }
                         }
                     }
-                    scope.dataModified = scope.propagated.length > 0;
                 })
-                scope.pinnedTreeNodes = [];
-
-                var infomsg = 'None of selected gene(s) has been moved from curation to prediction!';
-                var p_el = angular.element('tree-window');
-                if( scope.dataModified ) {
-                    infomsg = 'Promoted to prediction:\n'+scope.propagated.join(',');
+                var infomsg = '';
+                if( batch_gns.length > 0 ) {
+                    infomsg = 'Promoted to prediction:\n'+batch_gns.join(',');
                     rememberToSave();
+                } else {
+                    infomsg = 'These genes are already promoted!';
                 }
                 console.log(infomsg);
+                var p_el = angular.element('tree-window');
                 Dialogs.showInfo(infomsg, "bottom left", p_el);
             }
 
@@ -1878,7 +1887,7 @@ function($compile, $stateParams) {
                     if (cur_opts != [])
                        addTreeGenes(tree_genes, cur_opts, pre_opts, r, col_id, cur_id, pre_id);
                 }
-                var infomsg = 'None of selected gene(s) has been moved to prediction!';
+                var infomsg = 'These genes are already promoted!';
                 var p_el = angular.element('tree-window');
                 if( scope.dataModified ) {
                     infomsg = 'Promoted to prediction:\n'+scope.propagated.join(',');
@@ -2121,8 +2130,7 @@ function($compile, $stateParams) {
                 scope.saveInProgress = true;
                 scope.onSave(Object.values(scope.dataClone))
                 .then(function(res) {
-                    scope.saveInProgress = false;
-                    scope.dataSaved = true;
+                    rememberSaved();
                 })
             }
 
@@ -2139,13 +2147,12 @@ function($compile, $stateParams) {
                     function(newName){
                         scope.onSaveAs(Object.values(scope.dataClone), newName)
                         .then(function() {
-                            scope.saveAsInProgress = false;
-                            scope.dataSaved = true;
+                            rememberSaved();
+                            scope.propagated = [];
                         });
                     },
                     function() {
-                        scope.saveAsInProgress = false;
-                        scope.dataSaved = false;
+                        rememberToSave();
                     });
             }
 
