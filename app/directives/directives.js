@@ -1681,7 +1681,7 @@ function($compile, $stateParams) {
                             function(selectedGenes) {
                                 if(selectedGenes.length > 0) {
                                     //addGenesFromFuncTree(selectedGenes, col_id);
-                                    propagate2Curation(selectedGenes);
+                                    propagate2Prediction(selectedGenes);
                                 }
                             });
                     })
@@ -1814,8 +1814,8 @@ function($compile, $stateParams) {
                 return {};
             }
 
-            // propagate the selected genes/features in tree_genes to curation=1
-            var propagate2Curation = function(tree_genes) {
+            // propagate the selected genes/features in tree_genes to prediction=1 (NOT curation=1)
+            var propagate2Prediction = function(tree_genes) {
                 tree_genes.forEach((gn) => {
                     var gnm_key, gn_name;
                     var g_arr = gn.split('||');
@@ -1829,11 +1829,11 @@ function($compile, $stateParams) {
                         var c_arr = row_genes[c];
                         for (var l=0; l<c_arr.length; l++) {
                             if (c_arr[l]['feature'] == gn_name) {
-                                // found the tree gene in the genome feature, propagate the feature if it's not yet curated
-                                if (c_arr[l]['curation'] == 0) {
-                                    c_arr[l]['curation'] = 1;
-                                    c_arr[l]['prediction'] = 0;
-                                    // TODO:update the curated genes' table cells by changing the fore/background colors to green/pink
+                                // found the tree gene in the genome feature, propagate the feature if it's not yet predicted
+                                if (c_arr[l]['prediction'] == 0) {
+                                    c_arr[l]['prediction'] = 1;
+                                    c_arr[l]['curation'] = 0;
+                                    // update the predicted genes' table cells by changing the fore/background colors to blue/pink
                                     var col_key = getColKeyByColId(c);
                                     var tab_cell = scope.data[row_id -1][col_key];
                                     tab_cell[l].curation = c_arr[l]['curation'];
@@ -1855,7 +1855,7 @@ function($compile, $stateParams) {
                 var infomsg = 'None of selected gene(s) has been moved from curation to prediction!';
                 var p_el = angular.element('tree-window');
                 if( scope.dataModified ) {
-                    infomsg = 'Promoted from curation to prediction:\n'+scope.propagated.join(',');
+                    infomsg = 'Promoted to prediction:\n'+scope.propagated.join(',');
                     rememberToSave();
                 }
                 console.log(infomsg);
@@ -1878,10 +1878,10 @@ function($compile, $stateParams) {
                     if (cur_opts != [])
                        addTreeGenes(tree_genes, cur_opts, pre_opts, r, col_id, cur_id, pre_id);
                 }
-                var infomsg = 'None of selected gene(s) has been moved from curation to prediction!';
+                var infomsg = 'None of selected gene(s) has been moved to prediction!';
                 var p_el = angular.element('tree-window');
                 if( scope.dataModified ) {
-                    infomsg = 'Promoted from curation to prediction:\n'+scope.propagated.join(',');
+                    infomsg = 'Promoted to prediction:\n'+scope.propagated.join(',');
                 }
                 console.log(infomsg);
                 Dialogs.showInfo(infomsg, "bottom left", p_el);
@@ -2160,6 +2160,7 @@ function($compile, $stateParams) {
             })
 
             function setDropdownColor(sel) {
+                if (!sel) return;
                 var sel_options = sel.options;
                 for (var i =0; i < sel_options.lengty; i++) {
                     if(sel_options[i].selected) {
